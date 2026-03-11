@@ -19,7 +19,7 @@ src/
 
 
     gpu/        <-- for the other person later
-        gpu_correlation.py
+        #gpu_[...].py whatever is required
 
 run_experiment.py
 results/
