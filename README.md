@@ -41,7 +41,7 @@ GPU benchmark
 
 Later you could even do:
 
-python run_experiment.py --mode cpu
+python run_experiment.py --mode cpu ## default run:: python run_experiment.py
 python run_experiment.py --mode gpu
 
 Results folder
