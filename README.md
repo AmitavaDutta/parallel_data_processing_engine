@@ -11,11 +11,11 @@ test_cases/
 
 src/
     cpu/
-        1_dataset.py
-        2_serial_cpu.py
-        3_parallel_cpu.py
-        4_benchmark.py
-        5_visualize.py
+        dataset.py
+        serial_cpu.py
+        parallel_cpu.py
+        benchmark.py
+        visualize.py
 
 
     gpu/        <-- for the other person later
