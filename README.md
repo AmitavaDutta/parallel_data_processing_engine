@@ -3,18 +3,26 @@
 ```
 correlation-parallel-project/
 
+GPU_CPU.docx
+LICENSE
+Project_descriptions
 README.md
+test_cases/
 
 src/
-    dataset.py
-    serial_cpu.py
-    parallel_cpu.py
-    benchmark.py
-    visualization.py
+    cpu/
+        dataset.py
+        serial_cpu.py
+        parallel_cpu.py
+        benchmark.py
+        visualize.py
 
+    gpu/        <-- for the other person later
+        gpu_correlation.py
+
+run_experiment.py
 results/
-    runtime_plot.png
-    correlation_heatmap.png
+
 ```
 
 
