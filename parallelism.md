@@ -33,32 +33,33 @@ This design is intentional because **benchmarks require clean and reliable timin
 
 ## 2. Where the Parallelism Actually Happens
 
-Parallelism occurs **inside the benchmark step**, where the **correlation matrix** is computed using multiple workers.
+Parallelism occurs inside the benchmark step, where the **correlation matrix** is computed using multiple workers.
 
 Conceptually, the correlation matrix is defined as:
 
-[
+$$
 C_{ij} = \text{corr}(X_i, X_j)
-]
+$$
 
 Where:
 
-* (X_i) = time series *i*
-* (X_j) = time series *j*
+- $X_i$ = time series *i*  
+- $X_j$ = time series *j*
 
 The resulting matrix:
 
-[
+$$
 C \in \mathbb{R}^{N \times N}
-]
+$$
 
 Number of correlations that must be computed:
 
-[
+$$
 \frac{N(N-1)}{2}
-]
+$$
 
 This is the **computationally expensive part of the program**.
+
 
 ---
 
