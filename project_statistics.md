@@ -33,5 +33,9 @@
 </table>
 
 ---
+### Project-Specific Totals (Real-time)
+![Repo Stats](https://github-readme-stats.vercel.app/api/pin/?username=AmitavaDutta&repo=parallel_data_processing_engine&theme=react-dark&show_owner=true)
+
+---
 
 > **Note:** These graphs reflect real-time activity fetched directly from the GitHub API.
