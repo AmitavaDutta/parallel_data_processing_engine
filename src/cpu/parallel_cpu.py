@@ -1,58 +1,61 @@
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor
+import multiprocessing as mp
 
-def parallel_cpu_correlation(X, num_workers=4):
+def _compute_chunk(args):
     """
-    Compute the full correlation matrix of a dataset of time series using multi-threaded CPU parallelism.
+    Worker function for multiprocessing.
 
     Parameters
     ----------
-    X : np.ndarray
-        A 2D NumPy array of shape (N, T), where N is the number of time series
-        and T is the number of time steps per series.
-    num_workers : int, optional (default=4)
-        Number of worker threads to use for parallel computation.
+    args : tuple
+        (chunk, Z_T, T)
 
     Returns
     -------
     np.ndarray
-        The N x N correlation matrix, where element (i, j) is the Pearson correlation
-        coefficient between time series i and j.
-
-    Notes
-    -----
-    - This implementation splits the standardized time series matrix Z into chunks,
-      each handled by a separate thread.
-    - Each thread computes a portion of the correlation matrix (chunk @ Z.T) / (T - 1).
-    - Results are vertically stacked to form the full correlation matrix.
-    - Due to Python's GIL, using ThreadPoolExecutor may not always give maximum
-      CPU speedup for NumPy operations; multiprocessing could be explored for
-      further performance gains.
+        Partial correlation matrix block.
     """
-    N, T = X.shape  # Number of time series and number of time steps
+    chunk, Z_T, T = args
+    return (chunk @ Z_T) / (T - 1)
 
-    # Compute mean and standard deviation for each time series (row-wise)
+
+def parallel_cpu_correlation(X, num_workers=4):
+    """
+    Compute correlation matrix using multiprocessing.
+
+    Parameters
+    ----------
+    X : np.ndarray
+        Dataset of shape (N, T)
+    num_workers : int
+        Number of CPU processes
+
+    Returns
+    -------
+    np.ndarray
+        Correlation matrix (N x N)
+    """
+
+    N, T = X.shape
+
+    # Standardize
     means = X.mean(axis=1, keepdims=True)
     stds = X.std(axis=1, keepdims=True)
-
-    # Standardize each time series (Z-score normalization)
     Z = (X - means) / stds
 
-    # Define function to compute a chunk of the correlation matrix
-    def compute_chunk(chunk):
-        # chunk shape: (N_chunk, T)
-        # Z.T shape: (T, N)
-        # Result shape: (N_chunk, N)
-        return (chunk @ Z.T) / (T - 1)
+    Z_T = Z.T
 
-    # Split Z into approximately equal chunks along the row axis
+    # Split rows into chunks
     chunks = np.array_split(Z, num_workers)
 
-    # Compute each chunk in parallel using ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=num_workers) as executor:
-        results = list(executor.map(compute_chunk, chunks))
+    # Prepare arguments
+    tasks = [(chunk, Z_T, T) for chunk in chunks]
 
-    # Combine all chunk results into the full correlation matrix
+    # Multiprocessing pool
+    with mp.Pool(processes=num_workers) as pool:
+        results = pool.map(_compute_chunk, tasks)
+
+    # Combine results
     C = np.vstack(results)
 
     return C

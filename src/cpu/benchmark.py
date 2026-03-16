@@ -1,41 +1,50 @@
 import time
 import numpy as np
-from memory_profiler import memory_usage
+import psutil
+import os
 
-# Use relative imports
+# Relative imports
 from .dataset import generate_dataset
 from .serial_cpu import compute_correlation_serial
 from .parallel_cpu import parallel_cpu_correlation
-#from .visualize import generate_all_plots ## not needed
-
+from .block_cpu import compute_correlation_blockwise
 
 
 def measure_memory(func, *args):
     """
-    Measure peak memory usage of a function execution.
+    Measure memory usage of a function execution using psutil.
 
     Parameters
     ----------
     func : callable
-        The function whose memory usage is to be measured.
-    *args : any
+        Function to execute.
+    *args :
         Arguments to pass to the function.
 
     Returns
     -------
-    mem_peak : float
-        Peak memory usage in MB during the function execution.
+    mem_usage_MB : float
+        Approximate memory usage of the process during execution (MB).
     result : any
         Return value of the function.
     """
-    # memory_usage returns a tuple (mem_usage, retval) if retval=True
-    mem_peak, result = memory_usage((func, args), retval=True, max_usage=True)
-    return mem_peak, result
+
+    process = psutil.Process(os.getpid())
+
+    mem_before = process.memory_info().rss / (1024 ** 2)
+
+    result = func(*args)
+
+    mem_after = process.memory_info().rss / (1024 ** 2)
+
+    mem_usage_MB = max(mem_before, mem_after)
+
+    return mem_usage_MB, result
 
 
-def run_benchmark(N, T, num_workers=4):
+def run_benchmark(N, T, num_workers=4, block_size=1000):
     """
-    Run a benchmark comparing serial and parallel CPU correlation computations.
+    Run benchmark comparing serial, parallel, and block-wise CPU implementations.
 
     Parameters
     ----------
@@ -43,67 +52,86 @@ def run_benchmark(N, T, num_workers=4):
         Number of parallel time series.
     T : int
         Number of time steps per series.
-    num_workers : int, optional (default=4)
-        Number of threads to use for parallel computation.
+    num_workers : int
+        Number of processes for multiprocessing.
+    block_size : int
+        Block size for block-wise computation.
 
     Returns
     -------
     dict
-        A dictionary containing benchmark results:
-        - N, T
-        - serial_time, parallel_time
-        - speedup
-        - serial_memory_MB, parallel_memory_MB
-        - correct (boolean indicating numerical consistency)
+        Benchmark results.
     """
+
     print(f"\nRunning Benchmark: N={N}, T={T}")
 
-    # Generate synthetic dataset
+    # Generate dataset
     X = generate_dataset(N, T)
 
-    # ----------------------
+    # ---------------------
     # Serial CPU benchmark
-    # ----------------------
+    # ---------------------
     start = time.time()
-    mem_serial, C1 = measure_memory(compute_correlation_serial, X)
+    mem_serial, C_serial = measure_memory(compute_correlation_serial, X)
     serial_time = time.time() - start
 
-    # ----------------------
+    # ---------------------
     # Parallel CPU benchmark
-    # ----------------------
+    # ---------------------
     start = time.time()
-    mem_parallel, C2 = measure_memory(parallel_cpu_correlation, X, num_workers)
+    mem_parallel, C_parallel = measure_memory(
+        parallel_cpu_correlation, X, num_workers
+    )
     parallel_time = time.time() - start
 
-    # ----------------------
-    # Validation: ensure numerical correctness
-    # ----------------------
-    correct = np.allclose(C1, C2)
+    # ---------------------
+    # Block-wise CPU benchmark
+    # ---------------------
+    start = time.time()
+    mem_block, C_block = measure_memory(
+        compute_correlation_blockwise, X, block_size
+    )
+    block_time = time.time() - start
 
-    # Compute speedup
-    speedup = serial_time / parallel_time if parallel_time > 0 else 0
+    # ---------------------
+    # Validation
+    # ---------------------
+    correct_parallel = np.allclose(C_serial, C_parallel)
+    correct_block = np.allclose(C_serial, C_block)
 
-    # Aggregate results in a dictionary
+    # Speedups
+    parallel_speedup = serial_time / parallel_time if parallel_time > 0 else 0
+    block_speedup = serial_time / block_time if block_time > 0 else 0
+
     results = {
         "N": N,
         "T": T,
+
         "serial_time": serial_time,
         "parallel_time": parallel_time,
-        "speedup": speedup,
+        "block_time": block_time,
+
+        "parallel_speedup": parallel_speedup,
+        "block_speedup": block_speedup,
+
         "serial_memory_MB": mem_serial,
         "parallel_memory_MB": mem_parallel,
-        "correct": correct
+        "block_memory_MB": mem_block,
+
+        "correct_parallel": correct_parallel,
+        "correct_block": correct_block
     }
 
     return results
 
 
 if __name__ == "__main__":
-    # Quick test benchmark for N=500, T=2000
+
     results = run_benchmark(500, 2000)
 
     print("\nBenchmark Results")
-    print("-" * 30)
+    print("-" * 40)
+
     for key, value in results.items():
         print(f"{key}: {value}")
 
