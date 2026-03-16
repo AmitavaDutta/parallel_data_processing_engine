@@ -2,7 +2,7 @@
 <tr>
 <td align="center">
 
-### AmitavaDutta
+### Amitava Dutta
 <img src="https://github-readme-activity-graph.vercel.app/graph?username=AmitavaDutta"/>
 
 </td>
