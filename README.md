@@ -29,6 +29,10 @@ results/
 
 [![Contributors](https://contrib.rocks/image?repo=AmitavaDutta/parallel_data_processing_engine)](https://github.com/AmitavaDutta/parallel_data_processing_engine/graphs/contributors)
 
+## AmitavaDutta Contribution Graph
+
+![AmitavaDutta Activity](https://github-readme-activity-graph.vercel.app/graph?username=AmitavaDutta&theme=github)
+
 ### GPU Benchmark Extension Plan
 ```
 ## 1. Dataset Generation
