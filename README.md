@@ -29,42 +29,6 @@ results/
 
 [![Contributors](https://contrib.rocks/image?repo=AmitavaDutta/parallel_data_processing_engine)](https://github.com/AmitavaDutta/parallel_data_processing_engine/graphs/contributors)
 
-## 📊 Contributor Activity
-
-<table>
-<tr>
-<td align="center">
-
-### AmitavaDutta
-<img src="https://github-readme-activity-graph.vercel.app/graph?username=AmitavaDutta"/>
-
-</td>
-<td align="center">
-
-### S Yashvita
-<img src="https://github-readme-activity-graph.vercel.app/graph?username=SYashvita"/>
-
-</td>
-</tr>
-
-<tr>
-<td align="center">
-
-### Sipra Subhadarsini Sahoo
-<img src="https://github-readme-activity-graph.vercel.app/graph?username=Sipra-S"/>
-
-</td>
-<td align="center">
-
-### Bhavini
-<img src="https://github-readme-activity-graph.vercel.app/graph?username=bhaviniraina"/>
-
-</td>
-</tr>
-</table>
-
-![Contribution Snake](https://raw.githubusercontent.com/Platane/snk/output/github-contribution-grid-snake.svg)
-
 ### GPU Benchmark Extension Plan
 ```
 ## 1. Dataset Generation
