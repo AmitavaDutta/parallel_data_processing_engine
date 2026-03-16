@@ -23,9 +23,7 @@ Although multiprocessing introduces parallelism at the Python level, the **seria
 
 The serial implementation computes the correlation matrix primarily through the matrix multiplication
 
-[
-C = \frac{ZZ^T}{T-1}
-]
+( C_{ij} = \frac{Z_i Z_j^T}{T-1} )
 
 where (Z) is the standardized data matrix.
 
