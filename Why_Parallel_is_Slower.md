@@ -1,4 +1,4 @@
-# Why Parallel is Slower Most of the Time
+# Why is Parallel Slower than Single-Thread processing ?
 
 The implementation uses:
 
