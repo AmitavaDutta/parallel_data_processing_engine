@@ -42,6 +42,8 @@ results/
 ### Bhavini
 ![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=bhaviniraina)
 
+![Contribution Snake](https://raw.githubusercontent.com/Platane/snk/output/github-contribution-grid-snake.svg)
+
 ### GPU Benchmark Extension Plan
 ```
 ## 1. Dataset Generation
