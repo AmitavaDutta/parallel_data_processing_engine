@@ -35,7 +35,7 @@ The initial version of this script focused purely on building the PyTorch GPU lo
 
 ---
 
-## 🚀 Gemini Alterations & New Features
+##  Gemini Alterations & New Features
 
 The code was subsequently updated to transform it from a pure mathematical script into a complete benchmarking and profiling tool. The following functionalities were added:
 
