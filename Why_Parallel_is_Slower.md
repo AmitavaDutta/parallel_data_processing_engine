@@ -4,7 +4,7 @@ The implementation uses:
 
 `ThreadPoolExecutor`
 
-and inside each thread you run:
+and inside each thread we run:
 
 ```
 chunk @ Z.T
@@ -14,7 +14,7 @@ However, NumPy matrix multiplication is already parallelized internally using **
 
 This means the **serial implementation already uses multiple CPU cores**.
 
-When Python threads are added on top of this, you introduce additional overhead instead of gaining performance.
+When Python threads are added on top of this, we introduce additional overhead instead of gaining performance.
 
 The added overhead includes:
 
@@ -125,7 +125,7 @@ These are **exactly the insights expected in a parallel computing project**.
 
 # 7. Example Analysis for The Report
 
-You could summarize the findings as follows:
+We could summarize the findings as follows:
 
 > The multi-threaded CPU implementation did not consistently outperform the serial implementation. This occurs because NumPy’s underlying BLAS libraries already exploit multi-core parallelism during matrix multiplication. Adding Python-level threading introduces additional overhead such as thread management, memory partitioning, and result merging.  
 >
