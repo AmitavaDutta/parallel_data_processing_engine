@@ -46,7 +46,10 @@ def run_cpu_experiments():
     os.makedirs("results", exist_ok=True)
 
     # Experiment parameters
-    N_values = [500, 1000, 2000, 4000, 8000, 10000]
+    #N_values = [500, 1000, 2000, 4000, 8000, 10000]
+    #N_values = [500,1000,2000,4000,8000,10000,15000,20000] # Increased N values
+    N_values = [1000,2000,4000,8000,12000,16000,20000] # geometrically increasing sizes for the Log–Log Plot, small _values are removed because overhead > computation and Log–log scaling becomes meaningless.
+
     T = 2000
     num_workers = 4
     block_size = 1000
