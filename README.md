@@ -25,8 +25,9 @@ run_experiment.py
 results/
 
 ```
-![GitHub Repo Stats](https://github-readme-stats.vercel.app/api/pin/?username=AmitavaDutta&repo=parallel_data_processing_engine)
+## 👥 Contributors
 
+[![Contributors](https://contrib.rocks/image?repo=AmitavaDutta/parallel_data_processing_engine)](https://github.com/AmitavaDutta/parallel_data_processing_engine/graphs/contributors)
 
 ### GPU Benchmark Extension Plan
 ```
