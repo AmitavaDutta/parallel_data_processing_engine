@@ -33,9 +33,4 @@
 </table>
 
 ---
-![Contributors](https://github-contributor-stats.vercel.app)
-
-
----
-
 > **Note:** These graphs reflect real-time activity fetched directly from the GitHub API.
