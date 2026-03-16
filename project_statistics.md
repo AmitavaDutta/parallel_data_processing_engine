@@ -1,8 +1,4 @@
-# Project Statistics: Parallel Data Processing Engine
-
----
-
-## Collaborator Activity History
+## Collaborators' Activity History
 
 <table border="0">
 <tr>
