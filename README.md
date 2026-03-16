@@ -29,61 +29,37 @@ results/
 
 [![Contributors](https://contrib.rocks/image?repo=AmitavaDutta/parallel_data_processing_engine)](https://github.com/AmitavaDutta/parallel_data_processing_engine/graphs/contributors)
 
-<!DOCTYPE html>
-<html>
-<head>
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
+<table>
+<tr>
+<td align="center">
 
-<body>
-<div id="chart"></div>
+### AmitavaDutta
+<img src="https://github-readme-activity-graph.vercel.app/graph?username=AmitavaDutta"/>
 
-<script>
-const contributors = [
-  "AmitavaDutta",
-  "SYashvita",
-  "Sipra-S",
-  "bhaviniraina"
-];
+</td>
+<td align="center">
 
-async function getCommits(user){
-  const res = await fetch(
-   `https://api.github.com/repos/AmitavaDutta/parallel_data_processing_engine/stats/contributors`
-  );
-  const data = await res.json();
+### S Yashvita
+<img src="https://github-readme-activity-graph.vercel.app/graph?username=SYashvita"/>
 
-  const contributor = data.find(c => c.author.login === user);
-  return contributor.weeks.map(w => ({
-    week: new Date(w.w * 1000),
-    commits: w.c
-  }));
-}
+</td>
+</tr>
 
-async function buildChart(){
-  const traces = [];
+<tr>
+<td align="center">
 
-  for (let user of contributors){
-    const data = await getCommits(user);
+### Sipra Subhadarsini Sahoo
+<img src="https://github-readme-activity-graph.vercel.app/graph?username=Sipra-S"/>
 
-    traces.push({
-      x: data.map(d=>d.week),
-      y: data.map(d=>d.commits),
-      mode: "lines+markers",
-      name: user
-    });
-  }
+</td>
+<td align="center">
 
-  Plotly.newPlot("chart", traces, {
-    title:"Weekly Commits per Contributor",
-    xaxis:{title:"Week"},
-    yaxis:{title:"Commits"}
-  });
-}
+### Bhavini
+<img src="https://github-readme-activity-graph.vercel.app/graph?username=bhaviniraina"/>
 
-buildChart();
-</script>
-</body>
-</html>
+</td>
+</tr>
+</table>
 
 ### GPU Benchmark Extension Plan
 ```
