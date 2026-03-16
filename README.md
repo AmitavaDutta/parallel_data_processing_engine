@@ -29,6 +29,62 @@ results/
 
 [![Contributors](https://contrib.rocks/image?repo=AmitavaDutta/parallel_data_processing_engine)](https://github.com/AmitavaDutta/parallel_data_processing_engine/graphs/contributors)
 
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+<div id="chart"></div>
+
+<script>
+const contributors = [
+  "AmitavaDutta",
+  "SYashvita",
+  "Sipra-S",
+  "bhaviniraina"
+];
+
+async function getCommits(user){
+  const res = await fetch(
+   `https://api.github.com/repos/AmitavaDutta/parallel_data_processing_engine/stats/contributors`
+  );
+  const data = await res.json();
+
+  const contributor = data.find(c => c.author.login === user);
+  return contributor.weeks.map(w => ({
+    week: new Date(w.w * 1000),
+    commits: w.c
+  }));
+}
+
+async function buildChart(){
+  const traces = [];
+
+  for (let user of contributors){
+    const data = await getCommits(user);
+
+    traces.push({
+      x: data.map(d=>d.week),
+      y: data.map(d=>d.commits),
+      mode: "lines+markers",
+      name: user
+    });
+  }
+
+  Plotly.newPlot("chart", traces, {
+    title:"Weekly Commits per Contributor",
+    xaxis:{title:"Week"},
+    yaxis:{title:"Commits"}
+  });
+}
+
+buildChart();
+</script>
+</body>
+</html>
+
 ### GPU Benchmark Extension Plan
 ```
 ## 1. Dataset Generation
