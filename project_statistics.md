@@ -1,3 +1,38 @@
+## Commit Contributions
+
+<table>
+<tr>
+<td align="center">
+
+### Amitava Dutta
+![Amitava](https://github-readme-stats.vercel.app/api?username=AmitavaDutta&show_icons=true&theme=react&include_all_commits=true)
+
+</td>
+
+<td align="center">
+
+### S Yashvita
+![Yashvita](https://github-readme-stats.vercel.app/api?username=SYashvita&show_icons=true&theme=react&include_all_commits=true)
+
+</td>
+</tr>
+
+<tr>
+<td align="center">
+
+### Sipra Subhadarsini Sahoo
+![Sipra](https://github-readme-stats.vercel.app/api?username=Sipra-S&show_icons=true&theme=react&include_all_commits=true)
+
+</td>
+
+<td align="center">
+
+### Bhavini
+![Bhavini](https://github-readme-stats.vercel.app/api?username=bhaviniraina&show_icons=true&theme=react&include_all_commits=true)
+
+</td>
+</tr>
+</table>
 ## Collaborators' Activity History
 
 <table border="0">
