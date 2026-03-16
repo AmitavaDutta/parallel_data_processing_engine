@@ -25,9 +25,7 @@ run_experiment.py
 results/
 
 ```
-### 📈 Detailed Commit Activity
-View full stats here:
-https://github.com/AmitavaDutta/parallel_data_processing_engine/graphs/contributors
+![GitHub Repo Stats](https://github-readme-stats.vercel.app/api/pin/?username=AmitavaDutta&repo=parallel_data_processing_engine)
 
 
 ### GPU Benchmark Extension Plan
