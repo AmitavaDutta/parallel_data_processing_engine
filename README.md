@@ -28,10 +28,19 @@ results/
 ## 👥 Contributors
 
 [![Contributors](https://contrib.rocks/image?repo=AmitavaDutta/parallel_data_processing_engine)](https://github.com/AmitavaDutta/parallel_data_processing_engine/graphs/contributors)
+## 📊 Contributor Activity
 
-## AmitavaDutta Contribution Graph
+### AmitavaDutta
+![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=AmitavaDutta)
 
-![AmitavaDutta Activity](https://github-readme-activity-graph.vercel.app/graph?username=AmitavaDutta&theme=github)
+###  S Yashvita 
+![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=SYashvita)
+
+### Sipra Subhadarsini Sahoo 
+![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=Sipra-S)
+
+### Bhavini
+![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=bhaviniraina)
 
 ### GPU Benchmark Extension Plan
 ```
