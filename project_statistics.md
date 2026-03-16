@@ -38,10 +38,4 @@
 
 ---
 
-## Repository Language Distribution
-
-<p align="center">
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=AmitavaDutta&layout=compact&theme=react-dark&hide_border=true" />
-</p>
-
 > **Note:** These graphs reflect real-time activity fetched directly from the GitHub API.
