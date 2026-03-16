@@ -46,7 +46,7 @@ def run_cpu_experiments():
     os.makedirs("results", exist_ok=True)
 
     # Experiment parameters
-    N_values = [500, 1000, 2000, 4000]  # Number of parallel time series
+    N_values = [500, 1000, 2000, 4000, 8000, 10000]  # Number of parallel time series
     T = 2000                             # Length of each time series
     num_workers = 4                      # Threads for parallel CPU computation
 
