@@ -1,6 +1,6 @@
 # Why Parallel is Slower Most of the Time
 
-Your implementation uses:
+The implementation uses:
 
 `ThreadPoolExecutor`
 
@@ -12,7 +12,7 @@ chunk @ Z.T
 
 However, NumPy matrix multiplication is already parallelized internally using **BLAS libraries** such as **OpenBLAS** or **Intel MKL**.
 
-This means your **serial implementation already uses multiple CPU cores**.
+This means the **serial implementation already uses multiple CPU cores**.
 
 When Python threads are added on top of this, you introduce additional overhead instead of gaining performance.
 
@@ -59,7 +59,7 @@ Parallel requires extra memory because:
 
 Therefore, memory usage increases significantly.
 
-This is **exactly the type of scaling behavior your project aims to demonstrate**.
+This is **exactly the type of scaling behavior the project aims to demonstrate**.
 
 ---
 
@@ -91,7 +91,7 @@ If each value is stored as an 8-byte float:
 100M × 8 bytes ≈ 800 MB
 ```
 
-This matches the **observed memory growth** in your measurements.
+This matches the **observed memory growth** in the measurements.
 
 ---
 
@@ -111,7 +111,7 @@ This phenomenon is called:
 
 # 6. Why These Results Are Actually Good
 
-Your experimental results clearly demonstrate:
+The experimental results clearly demonstrate:
 
 - ✔ Parallel overhead  
 - ✔ Memory scaling behavior  
@@ -123,7 +123,7 @@ These are **exactly the insights expected in a parallel computing project**.
 
 ---
 
-# 7. Example Analysis for Your Report
+# 7. Example Analysis for The Report
 
 You could summarize the findings as follows:
 
