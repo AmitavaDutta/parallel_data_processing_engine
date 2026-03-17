@@ -269,7 +269,7 @@ def gpu_correlation_blockwise(data: np.ndarray, device: torch.device, block_size
 
     print(f"[GPU Block] H2D: {metrics['h2d_time']:.4f}s | Compute: {metrics['compute_time']:.4f}s | D2H: {metrics['d2h_time']:.4f}s")
     return final_matrix_cpu, metrics
-'''
+
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 6: Visualization
 # ─────────────────────────────────────────────────────────────────────────────
@@ -303,7 +303,7 @@ def plot_comparisons(N, T, times, memories):
     plt.tight_layout()
     plt.show()
 
-'''
+
 # ─────────────────────────────────────────────────────────────────────────────
 # REVISED SECTION 6: Visualization (Stacked Bar Chart for Overhead)
 # ─────────────────────────────────────────────────────────────────────────────
