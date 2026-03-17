@@ -52,6 +52,7 @@ python run_experiment.py --mode gpu
 
 
 > All results are automatically timestamped and saved in the `results/` directory.
+> (for now only the CPU execution part is pipelined that way)
 
 ---
 
