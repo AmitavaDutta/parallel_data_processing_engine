@@ -87,3 +87,7 @@ The core focus is **empirical analysis of $O(N^2)$ operations**. The project obj
 
 3. **Validate Accuracy**  
    Ensure that optimized **Block-wise** approaches maintain **bit-perfect numerical consistency** with the baseline serial code.
+
+# Presentation
+
+[View the Presentation](https://docs.google.com/presentation/d/1Owx46RyIDORviqmCtD00_zH3qimb5DthErWeH7hPy30/edit?usp=sharing)
