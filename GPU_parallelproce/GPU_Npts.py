@@ -269,7 +269,7 @@ def gpu_correlation_blockwise(data: np.ndarray, device: torch.device, block_size
 
     print(f"[GPU Block] H2D: {metrics['h2d_time']:.4f}s | Compute: {metrics['compute_time']:.4f}s | D2H: {metrics['d2h_time']:.4f}s")
     return final_matrix_cpu, metrics
-
+'''
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 6: Visualization
 # ─────────────────────────────────────────────────────────────────────────────
@@ -303,6 +303,28 @@ def plot_comparisons(N, T, times, memories):
     plt.tight_layout()
     plt.show()
 
+'''
+# ─────────────────────────────────────────────────────────────────────────────
+# REVISED SECTION 6: Visualization (Stacked Bar Chart for Overhead)
+# ─────────────────────────────────────────────────────────────────────────────
+def plot_breakdown(N, T, cpu_metrics, full_metrics, block_metrics):
+    labels = ['GPU Full', 'GPU Blockwise']
+    h2d = [full_metrics['h2d_time'], block_metrics['h2d_time']]
+    comp = [full_metrics['compute_time'], block_metrics['compute_time']]
+    d2h = [full_metrics['d2h_time'], block_metrics['d2h_time']]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.bar(labels, h2d, label='H2D (Data Up)')
+    ax.bar(labels, comp, bottom=h2d, label='Pure Computation')
+    ax.bar(labels, d2h, bottom=[i+j for i,j in zip(h2d, comp)], label='D2H (Result Down)')
+
+    # Add CPU baseline as a horizontal line for perspective
+    ax.axhline(y=cpu_metrics['time'], color='r', linestyle='--', label=f'CPU Baseline ({cpu_metrics["time"]:.2f}s)')
+
+    ax.set_ylabel('Time (Seconds)')
+    ax.set_title(f'GPU Overhead Breakdown (N={N}, T={T})')
+    ax.legend()
+    plt.show()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 7: Main Experiment Runner
