@@ -80,8 +80,7 @@ def cpu_correlation(data: np.ndarray):
     print(f"[CPU] Peak Memory: {peak_mem_mb:.1f} MB")
     
     return corr_matrix, exec_time, peak_mem_mb
-
-
+'''
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 4: Full-Matrix GPU Correlation (Strategy A)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -119,6 +118,7 @@ def gpu_correlation_full(data: np.ndarray, device: torch.device):
     
     return corr_matrix, exec_time, peak_mem_mb
 
+'''
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 5: Block-Wise GPU Correlation (Strategy B)
@@ -252,3 +252,4 @@ def run_experiment(N: int, T: int, block_size: int = 512):
 if __name__ == "__main__":
     # N=10000 will create a 10,000 x 10,000 matrix (100 million correlations!)
     run_experiment(N=10000, T=2000, block_size=2048)
+'''
