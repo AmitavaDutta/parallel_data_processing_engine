@@ -5,21 +5,18 @@ parallel_data_processing_engine/
 ├── run_experiment.py
 ├── results/
 └── src/
-    ├── __init__.py         <-- Create this (empty file)
-    └── cpu/
-        ├── __init__.py     <-- Create this (empty file)
-        ├── dataset.py
-        ├── serial_cpu.py
-        ├── parallel_cpu.py
-        ├── block_cpu.py
-        ├── benchmark.py
-        └── visualize.py
-
-
-    gpu/        <-- for the other person later
-        #gpu_[...].py whatever is required
-
-
+    ├── cpu/
+    │   ├── __init__.py         <-- Create this (empty file)
+    │   ├── dataset.py
+    │   ├── serial_cpu.py
+    │   ├── parallel_cpu.py
+    │   ├── block_cpu.py
+    │   ├── benchmark.py
+    │   └── visualize.py
+    │
+    └── gpu/
+        ├── __init__.py         <-- Create this (empty file)
+        # gpu_[...].py whatever is required later
 ```
 To run the run_experiment.py
 ```
