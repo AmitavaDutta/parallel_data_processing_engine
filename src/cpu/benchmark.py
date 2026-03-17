@@ -13,30 +13,30 @@ from .block_cpu import compute_correlation_blockwise
 def measure_memory(func, *args):
     """
     Measure memory usage of a function execution using psutil.
-
-    Parameters
-    ----------
-    func : callable
-        Function to execute.
-    *args :
-        Arguments to pass to the function.
-
-    Returns
-    -------
-    mem_usage_MB : float
-        Approximate memory usage of the process during execution (MB).
-    result : any
-        Return value of the function.
+    Accounts for both parent and child processes in multiprocessing.
     """
-
     process = psutil.Process(os.getpid())
 
+    # Memory before execution (parent process)
     mem_before = process.memory_info().rss / (1024 ** 2)
 
+    # Execute the target function
     result = func(*args)
 
-    mem_after = process.memory_info().rss / (1024 ** 2)
+    # Memory after execution (parent + all active children)
+    mem_after = process.memory_info().rss
+    
+    # Catch child processes recursively
+    for child in process.children(recursive=True):
+        try:
+            mem_after += child.memory_info().rss
+        except psutil.NoSuchProcess:
+            # Process might have already terminated
+            pass
+            
+    mem_after = mem_after / (1024 ** 2)
 
+    # Calculate the peak memory recorded
     mem_usage_MB = max(mem_before, mem_after)
 
     return mem_usage_MB, result
@@ -45,24 +45,7 @@ def measure_memory(func, *args):
 def run_benchmark(N, T, num_workers=4, block_size=1000):
     """
     Run benchmark comparing serial, parallel, and block-wise CPU implementations.
-
-    Parameters
-    ----------
-    N : int
-        Number of parallel time series.
-    T : int
-        Number of time steps per series.
-    num_workers : int
-        Number of processes for multiprocessing.
-    block_size : int
-        Block size for block-wise computation.
-
-    Returns
-    -------
-    dict
-        Benchmark results.
     """
-
     print(f"\nRunning Benchmark: N={N}, T={T}")
 
     # Generate dataset
@@ -134,4 +117,3 @@ if __name__ == "__main__":
 
     for key, value in results.items():
         print(f"{key}: {value}")
-
