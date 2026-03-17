@@ -132,3 +132,4 @@
 
 - Next, compare **Full Matrix vs Block-wise GPU computation**, highlighting how GPUs handle massive \(O(N^2)\) correlations more efficiently.
 
+###### Basic Linear Algebra Subprograms (BLAS) are a set of standardized, low-level Application Programming Interfaces (APIs) for performing fundamental vector and matrix operations. Originally developed in the 1970s, they serve as the "building blocks" for higher-level linear algebra libraries like
