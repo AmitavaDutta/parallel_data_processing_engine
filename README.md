@@ -42,9 +42,10 @@ The engine uses a **CLI-based approach** to toggle between different optimizatio
 
 ### GPU Benchmarks (Planned)
 
-> **Note:** GPU: Sipra is working on it
-> **Note:** Current GPU script is in [GPU Parallel Processing Module](https://github.com/AmitavaDutta/parallel_data_processing_engine/tree/main/GPU_parallelproce)
-> **Note:** In case of GPU if a single code structure is implemented do the following
+> **Note:**  
+> GPU: Sipra is working on it  
+> Current GPU script is in [GPU Parallel Processing Module](https://github.com/AmitavaDutta/parallel_data_processing_engine/tree/main/GPU_parallelproce)  
+> In case of GPU, if a single code structure is implemented, do the following:
 ```bash
 python run_experiment.py --mode gpu
 ```
