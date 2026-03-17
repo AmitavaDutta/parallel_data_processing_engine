@@ -119,7 +119,47 @@ def gpu_correlation_full(data: np.ndarray, device: torch.device):
     return corr_matrix, exec_time, peak_mem_mb
 
 '''
+# ─────────────────────────────────────────────────────────────────────────────
+# MODIFIED SECTION 4: Full-Matrix GPU Correlation with Detailed Timing
+# ─────────────────────────────────────────────────────────────────────────────
+def gpu_correlation_full(data: np.ndarray, device: torch.device):
+    if device.type != "cuda": return None, {}
+    print("\n--- Running GPU Full Matrix (Detailed Timing) ---")
 
+    torch.cuda.reset_peak_memory_stats()
+    metrics = {}
+
+    # 1. H2D Transfer (Host to Device)
+    torch.cuda.synchronize()
+    t_start = time.perf_counter()
+    X = torch.tensor(data, device=device)
+    torch.cuda.synchronize()
+    metrics['h2d_time'] = time.perf_counter() - t_start
+
+    # 2. Pure Computation
+    t_start = time.perf_counter()
+    mean = X.mean(dim=1, keepdim=True)
+    std  = X.std(dim=1, keepdim=True, unbiased=False)
+    std  = torch.clamp(std, min=1e-8)
+    Z    = (X - mean) / std
+    T_steps = data.shape[1]
+    corr_matrix = torch.mm(Z, Z.T) / T_steps
+    corr_matrix = torch.clamp(corr_matrix, -1.0, 1.0)
+    torch.cuda.synchronize()
+    metrics['compute_time'] = time.perf_counter() - t_start
+
+    # 3. D2H Transfer (Device to Host)
+    t_start = time.perf_counter()
+    final_matrix_cpu = corr_matrix.cpu().numpy()
+    torch.cuda.synchronize()
+    metrics['d2h_time'] = time.perf_counter() - t_start
+
+    metrics['total_time'] = metrics['h2d_time'] + metrics['compute_time'] + metrics['d2h_time']
+    metrics['peak_mem'] = torch.cuda.max_memory_allocated(0) / (1024**2)
+
+    print(f"[GPU Full] H2D: {metrics['h2d_time']:.4f}s | Compute: {metrics['compute_time']:.4f}s | D2H: {metrics['d2h_time']:.4f}s")
+    return final_matrix_cpu, metrics
+'''
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 5: Block-Wise GPU Correlation (Strategy B)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -175,7 +215,60 @@ def gpu_correlation_blockwise(data: np.ndarray, device: torch.device, block_size
     print(f"[GPU Block] Peak VRAM: {peak_mem_mb:.1f} MB")
     
     return corr_matrix, exec_time, peak_mem_mb
+'''
+# ─────────────────────────────────────────────────────────────────────────────
+# MODIFIED SECTION 5: Block-Wise GPU Correlation with Detailed Timing
+# ─────────────────────────────────────────────────────────────────────────────
+def gpu_correlation_blockwise(data: np.ndarray, device: torch.device, block_size: int = 1024):
+    if device.type != "cuda": return None, {}
+    print(f"\n--- Running GPU Blockwise (Detailed Timing, Size: {block_size}) ---")
 
+    torch.cuda.reset_peak_memory_stats()
+    metrics = {'h2d_time': 0, 'compute_time': 0, 'd2h_time': 0}
+    N, T_steps = data.shape
+
+    # 1. Transfer input data (H2D)
+    torch.cuda.synchronize()
+    t_start = time.perf_counter()
+    X = torch.tensor(data, device=device)
+    torch.cuda.synchronize()
+    metrics['h2d_time'] = time.perf_counter() - t_start
+
+    # 2. Computation Phase (Looping through blocks)
+    t_comp_start = time.perf_counter()
+    mean = X.mean(dim=1, keepdim=True)
+    std  = X.std(dim=1, keepdim=True, unbiased=False)
+    std  = torch.clamp(std, min=1e-8)
+    Z    = (X - mean) / std
+
+    corr_matrix = torch.zeros((N, N), device=device, dtype=torch.float32)
+    num_blocks = (N + block_size - 1) // block_size
+
+    for i in range(num_blocks):
+        i_start, i_end = i * block_size, min((i + 1) * block_size, N)
+        Zi = Z[i_start:i_end, :]
+        for j in range(i, num_blocks):
+            j_start, j_end = j * block_size, min((j + 1) * block_size, N)
+            Zj = Z[j_start:j_end, :]
+            block_corr = torch.mm(Zi, Zj.T) / T_steps
+            corr_matrix[i_start:i_end, j_start:j_end] = block_corr
+            if i != j:
+                corr_matrix[j_start:j_end, i_start:i_end] = block_corr.T
+
+    torch.cuda.synchronize()
+    metrics['compute_time'] = time.perf_counter() - t_comp_start
+
+    # 3. Transfer Result back (D2H)
+    t_start = time.perf_counter()
+    final_matrix_cpu = corr_matrix.cpu().numpy()
+    torch.cuda.synchronize()
+    metrics['d2h_time'] = time.perf_counter() - t_start
+
+    metrics['total_time'] = metrics['h2d_time'] + metrics['compute_time'] + metrics['d2h_time']
+    metrics['peak_mem'] = torch.cuda.max_memory_allocated(0) / (1024**2)
+
+    print(f"[GPU Block] H2D: {metrics['h2d_time']:.4f}s | Compute: {metrics['compute_time']:.4f}s | D2H: {metrics['d2h_time']:.4f}s")
+    return final_matrix_cpu, metrics
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 6: Visualization
