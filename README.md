@@ -1,123 +1,86 @@
-# parallel_data_processing_engine
-### Ideal Project Structure
+# Parallel Data Processing Engine
+
+A high-performance benchmarking suite designed to evaluate and compare data processing efficiency across **CPU** (Serial, Parallel, Block-wise) and **GPU** architectures.  
+The project focuses on identifying the **break-even point** where computational gains outweigh memory transfer overheads.
+
+---
+
+## 📂 Repository Structure
+
 ```
 parallel_data_processing_engine/
-├── run_experiment.py
-├── results/
+├── run_experiment.py         # Main entry point for benchmarking
+├── results/                  # Auto-generated experiment outputs
 └── src/
-    ├── cpu/
-    │   ├── __init__.py         <-- Create this (empty file)
-    │   ├── dataset.py
-    │   ├── serial_cpu.py
-    │   ├── parallel_cpu.py
-    │   ├── block_cpu.py
-    │   ├── benchmark.py
-    │   └── visualize.py
+    ├── cpu/                  # CPU-based implementations
+    │   ├── __init__.py
+    │   ├── dataset.py        # Data loading and synthetic generation
+    │   ├── serial_cpu.py     # Single-threaded implementation
+    │   ├── parallel_cpu.py   # Multi-threaded implementation
+    │   ├── block_cpu.py      # Cache-optimized block computation
+    │   ├── benchmark.py      # CPU performance metrics
+    │   └── visualize.py      # Plotting and results analysis
     │
-    └── gpu/
-        ├── __init__.py         <-- Create this (empty file)
-        # gpu_[...].py whatever is required later
-```
-To run the run_experiment.py
-```
-# Baseline, single-thread BLAS
-python run_experiment.py --mode cpu --version baseline --blas single
-
-# Optimized, single-thread BLAS
-python run_experiment.py --mode cpu --version optimized --blas single
-
-# Baseline, multi-thread BLAS
-python run_experiment.py --mode cpu --version baseline --blas multi
-
-# Optimized, multi-thread BLAS
-python run_experiment.py --mode cpu --version optimized --blas multi
-
+    └── gpu/                  # GPU-based implementations (WIP)
+        └── __init__.py       # Future CUDA/OpenCL implementations
 ```
 
-### GPU Benchmark Extension Plan
-```
-## 1. Dataset Generation
-- Reuse `dataset.py` (synthetic data is sufficient).
-- Optionally, allow passing the dataset to GPU as a `cupy` or `torch` tensor.
+---
 
-## 2. GPU Correlation Implementations (`src/gpu/gpu_correlation.py`)
-- Implement at least **two strategies**:
-  1. **Full correlation matrix computation**: compute the entire matrix at once (may hit memory limit for large N).
-  2. **Block-wise / chunked computation**: split the matrix to avoid GPU memory overflow.
-- Include optional **timing of data transfer** (CPU → GPU and GPU → CPU).
+## ⚡ Running Experiments
 
-## 3. GPU Benchmarking
-- Write `run_benchmark_gpu(N, T, strategy, seed)` (or extend existing `run_benchmark`) to:
-  - Generate dataset.
-  - Move data to GPU.
-  - Measure time for:
-    - CPU → GPU transfer
-    - GPU computation
-    - GPU → CPU transfer
-  - Return runtime breakdown, memory usage, and correctness compared to CPU results.
+The engine uses a **CLI-based approach** to toggle between different optimization levels and BLAS (Basic Linear Algebra Subprograms) configurations.
 
-## 4. Integration into `run_experiment.py`
-- Extend `run_gpu_experiments()` to:
-  - Loop over different `N` values.
-  - Loop over different GPU strategies.
-  - Call GPU benchmark for each combination.
-  - Collect results in a DataFrame (similar to CPU).
-  - Save CSV as `results_gpu.csv`.
-  - Generate plots with `mode="gpu"`.
+### CPU Benchmarks
 
-## 5. Memory-Limited Scenario
-- For very large `N`, demonstrate **block-wise GPU computation**.
-- Show that the full matrix may fail due to GPU memory.
-- Compare performance and memory usage.
+| Configuration | Command |
+|---------------|---------|
+| Baseline (Single-thread BLAS) | `python run_experiment.py --mode cpu --version baseline --blas single` |
+| Optimized (Single-thread BLAS) | `python run_experiment.py --mode cpu --version optimized --blas single` |
+| Baseline (Multi-thread BLAS) | `python run_experiment.py --mode cpu --version baseline --blas multi` |
+| Optimized (Multi-thread BLAS) | `python run_experiment.py --mode cpu --version optimized --blas multi` |
 
-## 6. Visualization
-- Reuse `visualize.py`.
-- Pass `mode="gpu"` for filenames to avoid overwriting CPU plots.
-- Plots show:
-  - Runtime
-  - Speedup vs CPU
-  - Memory usage
-  - Optional: correlation matrix heatmap
+### GPU Benchmarks (Planned)
 
-## 7. Profiling / Bottleneck Analysis
-- Compare GPU strategies to show which is faster under different problem sizes.
-- Measure data transfer overhead to highlight cases where CPU ↔ GPU communication dominates performance.
-```
-## Some important Instructions
-```
-Shared experiment runner
+> **Note:** GPU support is under development
 
-Keep this in root:
-
-run_experiment.py
-
-
-This script can run both:
-
-CPU benchmark
-GPU benchmark
-
-
-Later you could even do:
-
-python run_experiment.py --mode cpu ## default run:: python run_experiment.py
+```bash
 python run_experiment.py --mode gpu
-
-Results folder
-
-Create:
-
-results/
-
-
-Save:
-
-runtime_plot.png
-correlation_heatmap.png
-benchmark_table.csv
-
-
-This is very useful for the report.
 ```
 
-### GPU computing can to be done in google collab. Everyone won't have a dedicated GPU and even if a dedicated GPU is available there are many dependencies required for CuPy or PyTorch that may take up quiet some time to install locally, so best idea would be to use google collab.
+> All results are automatically timestamped and saved in the `results/` directory.
+
+---
+
+## 🛠 Project Workflow & Responsibilities
+
+| Contributor | Project Phase | Targeted Metric |
+|-------------|---------------|----------------|
+| **Amitava** | CPU Implementation (Single/Multi-thread) | Compute Latency |
+|             | Block-wise Computation (Shared) | Cache Efficiency |
+| **Sipra** | GPU Implementation | Throughput (FLOPS) |
+|             | Block-wise Computation (Shared) | Memory Coalescing |
+| **Bhavini** | Numerical Consistency Check (CPU vs GPU) | Precision / Bit-error |
+|             | Complexity Analysis ($O(N^2)$) | Algorithmic Scale |
+|             | Overhead vs Computation Equilibrium | Break-even Point |
+|             | System Profiling (CPU/GPU/RAM bottlenecks) | Resource Saturation |
+|             | Code Revision & Optimization | Performance Tuning |
+|             | Experiment Execution & Plotting (Shared) | Visualization |
+| **Yashvita** | Bandwidth & Data Transfer Analysis | MB/s Transfer Rate |
+|             | Transfer Overhead Optimization | PCIe Latency |
+|             | Experiment Execution & Plotting (Shared) | Visualization |
+
+---
+
+## 🔬 Methodology
+
+The core focus is **empirical analysis of $O(N^2)$ operations**. The project objectives are:
+
+1. **Identify Bottlenecks**  
+   Use system profiling to determine if the performance lag is due to compute logic or RAM bandwidth.
+
+2. **Optimize Transfers**  
+   Implement strategies to minimize latency between **Host (CPU)** and **Device (GPU)** memory.
+
+3. **Validate Accuracy**  
+   Ensure that optimized **Block-wise** approaches maintain **bit-perfect numerical consistency** with the baseline serial code.
