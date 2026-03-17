@@ -341,6 +341,7 @@ def run_experiment(N: int, T: int, block_size: int = 512):
 
     # Run CPU
     _, cpu_time, cpu_mem = cpu_correlation(data)
+    
 
     if device.type == "cuda":
         # Run GPU Full
@@ -366,5 +367,17 @@ def run_experiment(N: int, T: int, block_size: int = 512):
 # This is where the script begins execution.
 if __name__ == "__main__":
     # N=10000 will create a 10,000 x 10,000 matrix (100 million correlations!)
-    run_experiment(N=10000, T=2000, block_size=2048)
-'''
+#    run_experiment(N=10000, T=2000, block_size=2048)
+    N, T = 8000, 1000
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    data = np.random.standard_normal((N, T)).astype(np.float32)
+
+    # CPU
+    _, cpu_time, cpu_mem = cpu_correlation(data)
+    cpu_metrics = {'time': cpu_time, 'mem': cpu_mem}
+
+    # GPU
+    _, full_m = gpu_correlation_full(data, device)
+    _, block_m = gpu_correlation_blockwise(data, device, block_size=2048)
+
+    plot_breakdown(N, T, 0, full_m, block_m)
