@@ -50,9 +50,8 @@ The engine uses a **CLI-based approach** to toggle between different optimizatio
 python run_experiment.py --mode gpu
 ```
 
-
-> All results are automatically timestamped and saved in the `results/` directory.
-> (for now only the CPU execution part is pipelined that way)
+> All results are automatically timestamped and saved in the `results/` directory.  
+> (For now only the CPU execution part is pipelined that way)
 
 ---
 
