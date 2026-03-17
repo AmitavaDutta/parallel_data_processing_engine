@@ -1,15 +1,14 @@
 # Parallelism in the CPU Experiment Pipeline
 
-This section explains how parallelism is used in the CPU experiment pipeline, focusing only on the execution structure of the experiment rather than the internal implementation details of helper functions.
+This section explains how parallelism is used in the CPU experiment pipeline, focusing on the execution structure, the shared memory architecture, and the benchmarking mechanics.
 
 ---
 
 # 1. Role of `run_cpu_experiments()`
 
-The function `run_cpu_experiments()` acts as the **experiment controller**.  
-It manages benchmarking across different dataset sizes.
+The function `run_cpu_experiments()` acts as the **experiment controller**. It manages systematic benchmarking across various dataset sizes \((N)\).
 
-The core structure is:
+Core structure:
 
 ```python
 for N in N_values:
@@ -19,210 +18,135 @@ for N in N_values:
 Execution order:
 
 ```
-N = 500   → run benchmark
-N = 1000  → run benchmark
-N = 2000  → run benchmark
-N = 4000  → run benchmark
-N = 8000  → run benchmark
-N = 10000 → run benchmark
+N = 500 → N = 1000 → N = 2000 → ... → N = 20000
 ```
+
+## Sequential Constraint
 
 Each benchmark runs **sequentially**.
 
-This is intentional because benchmark experiments must avoid resource interference that could distort runtime measurements.
+This is a deliberate design choice for scientific benchmarking. Running multiple experiments simultaneously would introduce:
 
-Running experiments simultaneously would introduce:
+- CPU contention  
+- Memory contention  
+- Noisy measurements  
 
-- CPU contention
-- Memory contention
-- Inaccurate timing measurements
-
-Therefore the **experiment driver remains sequential**.
+The experiment driver remains sequential to ensure **accurate and reproducible timing results**.
 
 ---
 
 # 2. Where Parallelism Actually Occurs
 
-Parallelism occurs inside the **correlation matrix computation** used during benchmarking.
+Parallelism occurs inside the **correlation matrix computation**.
 
-The correlation matrix is defined as:
-
-\[
-C = \text{corr}(X)
-\]
-
-where:
-
-- \(X\) is the dataset of shape \(N \times T\)
-- \(N\) = number of time series
-- \(T\) = length of each time series
-
-After standardization of the dataset:
+After standardizing the dataset:
 
 \[
 Z = \frac{X - \mu}{\sigma}
 \]
 
-the correlation matrix can be computed using matrix multiplication:
+the correlation matrix is computed as:
 
 \[
 C = \frac{Z Z^T}{T - 1}
 \]
 
-This transforms the problem into a **large linear algebra operation**.
-
----
-
-# 3. Computational Complexity
-
-The resulting correlation matrix has shape:
-
-\[
-C \in \mathbb{R}^{N \times N}
-\]
-
-The total number of correlations grows as:
+This transforms the problem into a **large linear algebra operation** with complexity:
 
 \[
 O(N^2)
 \]
 
-This quadratic growth is the main reason the computation becomes expensive for large datasets.
+---
+
+# 3. Parallelization Strategy: Shared Memory Model
+
+The implementation uses **data parallelism with shared memory** to reduce overhead.
 
 ---
 
-# 4. Parallelization Strategy Used
+## The Zero-Copy Approach
 
-Instead of computing individual pairwise correlations, the implementation **parallelizes rows of the matrix multiplication**.
+Instead of copying data to each worker:
 
-Each worker computes a subset of rows from the product:
+- **Allocation:** Parent process allocates shared memory for \(Z\)  
+- **Access:** Workers receive a reference (shared memory name)  
+- **Execution:** All workers read the same physical memory  
+
+This eliminates:
+
+- Pickling  
+- Data duplication  
+- IPC overhead  
+
+---
+
+## Row-wise Distribution
+
+The rows of the correlation matrix are partitioned across workers:
+
+| Worker | Responsibility | Computation |
+|------|------|------|
+| Worker 1 | Rows \(0\) to \(i\) | \(Z_{chunk1} \times Z^T\) |
+| Worker 2 | Rows \(i+1\) to \(j\) | \(Z_{chunk2} \times Z^T\) |
+| ... | ... | ... |
+
+Each worker computes a partial result:
 
 \[
-Z Z^T
+\text{Partial}_i = Z_{chunk} \times Z^T
 \]
 
-Example with **4 workers**:
-
-| Worker | Rows Computed |
-|------|------|
-| Worker 1 | rows 0–249 |
-| Worker 2 | rows 250–499 |
-| Worker 3 | rows 500–749 |
-| Worker 4 | rows 750–999 |
-
-Each worker performs:
+Final matrix assembly:
 
 ```
-Zi @ Z.T
-```
-
-where:
-
-```
-Zi = subset of rows from Z
-```
-
-The result from each worker has shape:
-
-```
-(rows_i × N)
-```
-
-These partial matrices are then concatenated to form the final correlation matrix.
-
-Conceptually:
-
-```
-Process 1 → compute C[0:250, :]
-Process 2 → compute C[250:500, :]
-Process 3 → compute C[500:750, :]
-Process 4 → compute C[750:1000, :]
-```
-
-Final matrix:
-
-```
-C = stack(worker results)
+C = vstack(worker_results)
 ```
 
 ---
 
-# 5. Block-wise Computation Strategy
+# 4. Block-wise (Tiled) Strategy
 
-A second CPU strategy uses **block-wise computation**.
-
-Instead of computing the full matrix multiplication at once, the computation is divided into **tiles (blocks)**:
+A secondary strategy uses **block-wise computation**:
 
 \[
 C_{ij} = \frac{Z_i Z_j^T}{T - 1}
 \]
 
-where:
+## Memory Mapping
 
-- \(Z_i\) and \(Z_j\) represent subsets of rows from \(Z\)
+- Uses `np.memmap` to store intermediate results on disk  
+- Keeps RAM usage low  
 
-Conceptually:
+## Trade-off
 
-```
-Z divided into blocks
-
-Block 1 vs Block 1
-Block 1 vs Block 2
-Block 2 vs Block 1
-Block 2 vs Block 2
-```
-
-This produces the full matrix through **many smaller matrix multiplications**.
-
-### Advantages
-
-- Reduced peak memory usage
-- Scalable to very large datasets
-- Compatible with GPU-style tiling
-
-However, **smaller matrix multiplications reduce the efficiency of BLAS optimizations**.
+- Nested loops introduce overhead  
+- Smaller matrix multiplications reduce BLAS efficiency  
 
 ---
 
-# 6. BLAS Multithreading and Its Effect
+# 5. BLAS Multithreading vs. Explicit Parallelism
 
-NumPy internally uses BLAS libraries such as **OpenBLAS** or **MKL**.
-
-These libraries already implement **highly optimized parallel linear algebra routines**.
-
-In the default configuration:
-
-```
-NumPy matrix multiplication already uses multiple CPU threads
-```
-
-Therefore the **"serial" implementation is not truly single-threaded**.
-
-Execution structure:
-
-```
-Python (single thread)
-      ↓
-BLAS library (multi-threaded)
-```
-
-This explains why the serial implementation often performs better than **Python-level multiprocessing**.
+BLAS plays a critical role in performance.
 
 ---
 
-# 7. Experiment Configuration
+## Implicit Parallelism (Default)
 
-To isolate the effect of Python multiprocessing, experiments were conducted in two configurations.
+- NumPy uses BLAS (OpenBLAS/MKL)  
+- Automatically utilizes multiple CPU threads  
 
-## Default BLAS Behavior
+Result:
 
-BLAS is allowed to use multiple threads.
+```
+"Serial" implementation is already parallel
+```
 
-This produces extremely fast matrix multiplication but reduces the benefit of Python multiprocessing.
+---
 
-## Forced Single-threaded BLAS
+## Explicit Parallelism (Controlled)
 
-Environment variables were used to restrict BLAS to one thread:
+To isolate multiprocessing performance:
 
 ```bash
 OPENBLAS_NUM_THREADS=1
@@ -230,76 +154,73 @@ OMP_NUM_THREADS=1
 MKL_NUM_THREADS=1
 ```
 
-This removes internal BLAS parallelism and allows a more direct comparison between:
+This ensures:
 
-- Python multiprocessing
-- Single-thread CPU execution
+- One BLAS thread per worker  
+- No oversubscription  
 
 ---
 
-# 8. Architecture of the CPU Experiment Pipeline
-
-The CPU experiment system has three conceptual layers:
+# 6. Architecture of the Experiment Pipeline
 
 ```
-run_cpu_experiments()
-      |
-      | sequential experiment loop
-      |
-run_benchmark()
-      |
-      | calls different implementations
-      |
-+-------------------------------+
-| Serial CPU                    |
-| Multiprocessing CPU           |
-| Block-wise CPU                |
-+-------------------------------+
-      |
-      |
-Correlation Matrix Computation
-      |
-+-----------+-----------+-----------+
-| Worker 1  | Worker 2  | Worker 3  |
-+-----------+-----------+-----------+
-      |
-      |
-combine partial results
-      |
-      |
-Correlation Matrix C
+[ Experiment Controller: run_cpu_experiments ]
+             |
+             | (Sequential Loop over N)
+             v
+[ Benchmark Engine: run_benchmark ]
+             |
+             |--> [ Recursive Memory Tracker ]
+             |    (Parent + All Child Processes)
+             |
+             |--> [ Implementation Selection ]
+                  |-- Serial (Single-thread BLAS)
+                  |-- Parallel (Shared Memory Workers)
+                  |-- Block-wise (Tiled / Memmap)
+             v
+[ Result Aggregator ] → CSV / Visualization
 ```
 
 ---
 
-# 9. Type of Parallelism Used
+# 7. Recursive Memory Tracking
 
-The CPU implementation primarily uses **data parallelism**.
+Standard memory tracking is insufficient.
 
-The dataset \(Z\) is partitioned into **row blocks**, and each worker performs the same computation on different subsets of rows.
+This pipeline uses **recursive tracking**:
 
-This differs from other forms of parallelism:
+1. Record memory before execution  
+2. Spawn worker processes  
+3. Traverse all child processes  
+4. Sum their **Resident Set Size (RSS)**  
 
-| Type | Used Here |
-|------|------|
-| Data Parallelism | ✔ |
-| Task Parallelism | ✘ |
-| Pipeline Parallelism | ✘ |
+Result:
+
+- Accurate measurement of total memory usage  
+- Captures full parallel footprint  
 
 ---
 
-# 10. Key Takeaway
+# 8. Key Takeaways
 
-The CPU experiment demonstrates an important practical lesson:
+- **Overhead Matters:**  
+  Even with shared memory, process creation cost makes serial BLAS faster for small datasets.
 
-**Highly optimized numerical libraries can outperform naive parallelization strategies.**
+- **Efficiency Threshold Exists:**  
+  There is a dataset size \(N\) where multiprocessing begins to outperform BLAS.
 
-The serial implementation benefits from:
+- **Architecture is Critical:**  
+  Transitioning from data copying to shared memory is essential for scaling large problems.
 
-- SIMD vectorization
-- Cache optimization
-- Low-level memory management
-- Internal multithreading
+---
 
-As a result, **Python multiprocessing only becomes beneficial for very large problem sizes where BLAS optimizations alone are insufficient**.
+# Final Insight
+
+Efficient parallel computing depends on:
+
+```
+problem size + memory architecture + hardware utilization
+```
+
+Not just the presence of parallelism.
 

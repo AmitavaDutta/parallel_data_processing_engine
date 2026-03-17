@@ -1,8 +1,12 @@
-# What We Actually Did
+# What We Actually Did: Parallelization Strategy
 
-We parallelized **rows of the correlation matrix computation**, not raw data points.
+We parallelized the **rows of the correlation matrix computation**, rather than splitting the raw data points into independent groups.
 
-Recall the correlation formula:
+---
+
+# The Mathematical Mapping
+
+Recall the correlation formula used in our implementation:
 
 \[
 C = \frac{Z Z^T}{T-1}
@@ -10,140 +14,184 @@ C = \frac{Z Z^T}{T-1}
 
 Where:
 
-- \(Z\) shape = \((N, T)\)
-- \(C\) shape = \((N, N)\)
+- \(Z\) (Standardized Matrix) shape = \((N, T)\)  
+- \(C\) (Correlation Matrix) shape = \((N, N)\)  
 
-Each row of \(C\) is the correlation of **one time series with all others**.
+Each row \(i\) of the resulting matrix \(C\) represents the correlation of time series \(i\) with all \(N\) time series in the dataset.
 
-Therefore, we split **rows of \(C\)** across processes.
+To parallelize this, we distribute the responsibility of calculating these rows across multiple CPU cores.
 
-Example with **4 workers**:
+---
+
+# Work Distribution (Example with 4 Workers)
+
+We split the \(N\) rows of the target matrix \(C\) into chunks:
 
 ```
-Worker 1 → rows 0–249
-Worker 2 → rows 250–499
-Worker 3 → rows 500–749
-Worker 4 → rows 750–999
+Worker 1 → computes rows 0 to 249 of C
+Worker 2 → computes rows 250 to 499 of C
+Worker 3 → computes rows 500 to 749 of C
+Worker 4 → computes rows 750 to 999 of C
 ```
 
-Each worker computes:
+Each worker \(i\) extracts a subset of standardized rows \(Z_{chunk}\) and performs the multiplication against the entire transposed matrix:
 
 \[
-Z_i @ Z^T
+\text{Partial Result}_i = \frac{Z_{chunk} \times Z^T}{T-1}
 \]
 
-for its assigned rows.
+---
 
-Then we stack the partial results to form the full matrix.
+# The Shared Memory Architecture
 
-Conceptually:
+In the optimized implementation, we replaced standard multiprocessing (which duplicates data) with a **Shared Memory Model**.
+
+---
+
+## 1. Zero-Copy Data Access
+
+- A block of **system shared memory** is allocated.  
+- The parent process writes the standardized matrix \(Z\) into this buffer once.  
+- Each worker receives a reference (shared memory name) to access the same physical memory.  
+
+This eliminates:
+
+- Data duplication  
+- Serialization (pickling) overhead  
+
+---
+
+## 2. Implementation Workflow
 
 ```
-Process 1 → compute C[0:250, :]
-Process 2 → compute C[250:500, :]
-Process 3 → compute C[500:750, :]
-Process 4 → compute C[750:1000, :]
+Main Process: Allocate Shared Memory → Write Z → Spawn Workers
+      ↓
+Worker Processes: Attach to Shared Memory → Compute C[start:end, :] → Return
+      ↓
+Main Process: Concatenate Results (vstack) → Unlink Shared Memory
 ```
-
-Final result:
-
-```
-C = concatenate(results)
-```
-
-So the workflow becomes:
-
-```
-parallel compute → partial results → merge
-```
-
-However, the **split dimension is the correlation matrix rows**, not the dataset itself.
 
 ---
 
 # Why We Did It This Way
 
-Correlation requires **all time series interacting with all others**.
+Correlation is an **all-to-all operation**.
 
-If the dataset were split like this:
+Every time series must interact with every other time series to fill the \(N \times N\) matrix.
 
-```
-first 50 series → process 1
-last 50 series → process 2
-```
-
-then **cross correlations would be missing**, such as:
+If we had split the dataset like:
 
 ```
-series 1 vs series 60
-series 2 vs series 80
+Group A: Series 1–50
+Group B: Series 51–100
 ```
 
-These pairs would never be computed.
-
-Therefore the correct strategy is to split by:
+Then cross-correlations such as:
 
 ```
-rows of the correlation matrix
+Series 10 vs Series 90
 ```
 
-not by
+would not be computed without additional communication.
+
+By splitting **rows of the output matrix** while keeping the full dataset accessible via shared memory:
+
+- All \(N^2\) correlations are computed  
+- Redundant data movement is avoided  
+
+---
+
+# Why Performance Challenges Persist
+
+Even after eliminating data transfer overhead using shared memory, the parallel CPU version often underperforms for moderate \(N\).
+
+---
+
+## 1. The "Process Tax"
+
+- Process creation in Linux/Windows is expensive  
+- Workers must initialize and attach to shared memory  
+
+For small to moderate \(N\):
 
 ```
-subsets of the dataset
+Process overhead > computation time
 ```
 
 ---
 
-# Computational Structure
+## 2. BLAS Native Supremacy
 
-The work distribution becomes:
+The serial implementation uses NumPy’s `dot`, backed by BLAS.
 
-Input:
+- Written in C/Fortran  
+- Optimized for cache, SIMD, and threading  
 
-```
-Z (N × T)
-```
+Two problematic scenarios:
 
-Worker \(i\) computes:
+### BLAS Single-threaded
 
-\[
-Z_i @ Z^T
-\]
-
-Where:
-
-```
-Zi = subset of rows of Z
+```bash
+OPENBLAS_NUM_THREADS=1
 ```
 
-Result shape:
+- Loses internal parallelism  
+- Reduces vectorized throughput  
+
+### BLAS Multithreaded + Multiprocessing
+
+- Each worker invokes multithreaded BLAS  
+- Leads to **oversubscription**  
+
+Example:
 
 ```
-Zi @ Z.T → (rows_i × N)
+4 workers × 4 BLAS threads = 16 threads
 ```
 
-Then the final matrix is assembled:
+Result:
+
+- CPU contention  
+- Context switching  
+- Reduced performance  
+
+---
+
+## 3. Memory Hierarchy & Cache Locality
+
+- Serial execution allows optimal cache reuse (L1/L2/L3)  
+- Parallel workers access shared memory simultaneously  
+
+This leads to:
+
+- Cache contention  
+- Increased memory bandwidth pressure  
+- Reduced effective throughput  
+
+---
+
+# Summary of the Workflow
 
 ```
-C = vstack(results)
+Prepare:   Standardize data and move it to Shared Memory
+Execute:   Assign chunks of the N × N matrix to workers
+Assemble:  Stack partial results into final matrix
+Monitor:   Track memory usage across parent + worker processes
 ```
 
 ---
 
-# Why This Still Performed Poorly
+# Final Insight
 
-Even though the work is parallelized, each process still needs access to:
+Shared memory removes **data transfer overhead**, but does not eliminate:
+
+- Process management cost  
+- BLAS vs multiprocessing conflicts  
+- Memory hierarchy limitations  
+
+Performance is ultimately constrained by:
 
 ```
-Z.T (size N × T)
+hardware efficiency > parallel abstraction
 ```
-
-This causes several problems:
-
-- **Large memory duplication**
-- **Heavy inter-process communication overhead**
-- **BLAS already performing parallel computation internally**
-
-Because of these factors, the multiprocessing implementation performs worse than the **NumPy serial implementation**.
 

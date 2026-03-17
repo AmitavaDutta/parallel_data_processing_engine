@@ -1,154 +1,133 @@
-## Analysis of CPU Implementations for Correlation Matrix Computation
+# Analysis of CPU Implementations for Correlation Matrix Computation
 
 We benchmarked three CPU-based implementations for computing the correlation matrix of \(N\) time series of length \(T\):
 
-1. **Serial CPU (NumPy)**
-2. **Multiprocessing CPU**
-3. **Block-wise CPU**
+- **Serial CPU (NumPy):** Baseline using standard dot products.  
+- **Multiprocessing CPU (Shared Memory):** Parallelized using Python’s multiprocessing with a shared memory buffer to avoid IPC overhead.  
+- **Block-wise CPU (Tiled):** Memory-efficient approach using smaller matrix tiles.  
 
 Experiments were performed under two configurations:
 
-- **BLAS Multithreaded (default NumPy behavior)**
-- **BLAS Single-threaded (forcing NumPy to one thread)**
-
-The results reveal several important performance characteristics related to **parallelism, overhead, and optimized numerical libraries**.
+- **BLAS Multithreaded:** Default NumPy behavior (implicit parallelism).  
+- **BLAS Single-threaded:** Forcing NumPy to one thread (explicit parallelism control).  
 
 ---
 
-# Why Parallel Processing is Slower than the Serial Implementation
+# Performance Dynamics of Parallel vs. Serial Implementations
 
-Although multiprocessing introduces parallelism at the Python level, the **serial implementation consistently performs faster in these experiments**. Several factors explain this behavior.
+While we optimized the parallel implementation using shared memory, the serial implementation often remains the most efficient for moderate \(N\).
 
-## 1. Highly Optimized BLAS Operations in NumPy
+---
 
-The serial implementation computes the correlation matrix primarily through the matrix multiplication
+## 1. Optimized BLAS vs. Python Orchestration
+
+The serial implementation computes the matrix via:
 
 \[
-C = \frac{ZZ^T}{T-1}
+C = \frac{Z Z^T}{T - 1}
 \]
 
-where \(Z\) is the standardized data matrix.
+NumPy delegates this to BLAS (OpenBLAS/MKL). These libraries are written in C/Fortran and optimized at the hardware level for:
 
-NumPy internally delegates this operation to **BLAS (Basic Linear Algebra Subprograms)** libraries such as **OpenBLAS** or **MKL**, which are heavily optimized for:
+- SIMD vectorization  
+- Cache locality  
+- Multithreading  
 
-- SIMD vectorization
-- CPU cache utilization
-- Multithreaded execution
-- Low-level memory management
-
-As a result, even the "serial" Python code actually executes a **highly optimized native implementation**, making it extremely efficient.
+Because the serial version passes one large matrix to BLAS, the library can maximize its internal threading and vectorization efficiency.
 
 ---
 
-## 2. Overhead of Multiprocessing
+## 2. Mitigating but Not Eliminating Parallel Overhead
 
-The multiprocessing implementation divides the work across multiple processes. However, this introduces significant overhead:
+In the updated implementation, we used `multiprocessing.shared_memory`.
 
-### Process Creation
+### IPC Improvement
 
-Each worker process must be spawned and initialized, which is computationally expensive relative to the workload for moderate dataset sizes.
+- Shared memory eliminates the need to pickle and copy the \(Z\) matrix to every worker.  
+- This significantly improves runtime compared to standard multiprocessing.
 
-### Inter-process Communication
+### Persistent Overheads
 
-Large data arrays must be **copied or serialized** between processes. Since Python processes do not share memory by default, this results in additional memory allocation and copying costs.
+Despite shared memory, key overheads remain:
 
-### Memory Duplication
-
-Each process may hold its own copy of the dataset or intermediate arrays, leading to:
-
-- Increased memory usage
-- Reduced cache locality
-- Higher memory bandwidth pressure
-
-These overheads often dominate the computation time for moderately sized problems.
+- **Process Creation Overhead:** Spawning and initializing 4–8 worker processes is expensive.  
+- For smaller \(N\), this setup cost exceeds the benefit of parallel computation.
 
 ---
 
-## 3. Loss of BLAS-Level Optimization
+## 3. The Efficiency Crossing Point
 
-When using multiprocessing, the computation is often broken into smaller chunks. These smaller matrix operations do not utilize BLAS optimizations as efficiently as the large matrix multiplication used in the serial implementation.
+The **parallel CPU implementation becomes beneficial only at larger \(N\)**.
 
-As a result:
+- BLAS is highly optimized but eventually faces limits with very large memory workloads.  
+- Explicit multiprocessing enables manual load balancing across cores.  
 
-- SIMD efficiency decreases
-- CPU cache utilization becomes worse
-- BLAS cannot fully exploit vectorized operations
+As \(N\) increases beyond cache-friendly sizes:
 
-This further reduces performance relative to the serial implementation.
+- Computation dominates overhead  
+- Parallel execution becomes competitive  
 
 ---
 
 # Behavior of the Block-wise Implementation
 
-The **block-wise approach** computes the correlation matrix in smaller tiles rather than computing the entire matrix at once.
-
-Conceptually:
+The block-wise approach divides the computation into tiles:
 
 \[
-C_{ij} = \frac{Z_i Z_j^T}{T-1}
+C_{block} = \frac{Z_i Z_j^T}{T - 1}
 \]
 
-where \(Z_i\) and \(Z_j\) represent blocks of rows from the standardized matrix.
+---
 
-## Advantages
+## Memory-Constraint Strategy
 
-The block-wise strategy is useful for:
+In the updated `block_cpu.py`, memory mapping (`memmap`) was introduced:
 
-- **Reducing peak memory usage**
-- Handling **very large datasets**
-- Enabling **GPU-style tiling strategies**
-
-It is commonly used in high-performance computing when the full matrix does not fit in memory.
-
-## Performance Observations
-
-However, in the current experiments the block-wise implementation is slower than the serial implementation because:
-
-### Increased Loop Overhead
-
-The algorithm introduces nested loops over blocks, which adds Python-level control overhead.
-
-### Smaller Matrix Multiplications
-
-Each block multiplication is smaller, which reduces the efficiency of BLAS optimizations.
-
-Large matrix operations allow BLAS libraries to:
-
-- better utilize SIMD
-- improve cache reuse
-- amortize memory access costs
-
-Breaking the computation into smaller pieces reduces these benefits.
-
-### Additional Memory Operations
-
-Intermediate blocks must be repeatedly allocated and written back to the final matrix, increasing memory traffic.
+- Enables computation for \(N = 20{,}000+\)  
+- Uses disk as an extension of RAM  
+- Prevents memory overflow  
 
 ---
 
-# Effect of BLAS Multithreading vs Single-threaded BLAS
+## Performance Trade-offs
 
-Two configurations were tested:
+- **Loop Overhead:** Each block introduces Python-level loop cost.  
+- **Reduced BLAS Utilization:** Smaller tiles prevent BLAS from applying full optimization.  
 
-### 1. BLAS Multithreaded (Default NumPy)
+However:
 
-In this configuration, NumPy's BLAS backend automatically uses multiple CPU threads for matrix operations.
-
-This means the **serial implementation is already parallelized internally**.
-
-As a result:
-
-- Serial computation becomes extremely fast.
-- Python-level multiprocessing provides little benefit.
-- Multiprocessing may even compete with BLAS threads for CPU resources.
-
-This explains the **very large performance gap** between serial and multiprocessing methods in the multithreaded BLAS results.
+- This approach is the most **stable**  
+- Prevents crashes in high-dimensional runs  
 
 ---
 
-### 2. BLAS Forced to Single Thread
+# BLAS Threading and Resource Contention
 
-In the second experiment, BLAS was forced to run with a single thread using environment variables:
+A critical issue observed is **oversubscription**.
+
+---
+
+## 1. BLAS Multithreaded (Default)
+
+- NumPy already uses multiple threads internally.  
+
+If multiprocessing is added:
+
+```
+4 processes × 4 BLAS threads = 16 threads
+```
+
+On a system with fewer cores:
+
+- Threads compete for CPU  
+- Context switching increases  
+- Performance degrades  
+
+---
+
+## 2. BLAS Single-threaded (Forced)
+
+By setting:
 
 ```bash
 OPENBLAS_NUM_THREADS=1
@@ -156,270 +135,69 @@ OMP_NUM_THREADS=1
 MKL_NUM_THREADS=1
 ```
 
-This removes internal BLAS parallelism.
-
-Consequences:
-
-- Serial computation becomes slower.
-- Multiprocessing gains some relative advantage.
-
-However, even in this configuration multiprocessing still performs worse for most tested problem sizes because:
-
-- process management overhead remains significant
-- memory duplication costs remain high
-
-Only for very large \(N\) might multiprocessing begin to show benefits.
+- Each worker uses exactly one core  
+- Eliminates oversubscription  
+- Provides clean scaling behavior  
 
 ---
 
-# Memory Usage Observations
+# Accurate Memory Usage Observations
 
-Memory consumption increases significantly for both multiprocessing and block-wise approaches.
-
-### Multiprocessing Memory Overhead
-
-Each process may hold:
-
-- partial datasets
-- intermediate correlation results
-- temporary buffers
-
-This leads to higher overall memory usage compared to the serial implementation.
-
-### Block-wise Memory Overhead
-
-Block-wise computation introduces temporary matrices for each block multiplication, increasing peak memory usage during execution.
+With recursive memory tracking:
 
 ---
 
-# Summary of Observed Behavior
+## Parent + Children Accounting
 
-| Method | Main Characteristics | Observed Performance |
+- Total memory now includes all worker processes  
+- Parallel implementation shows significantly higher usage than serial  
+
+---
+
+## Shared Memory Footprint
+
+- Shared memory reduces duplication  
+- However, OS still accounts memory in each process’s virtual space  
+
+---
+
+## Block-wise Memory Behavior
+
+- Most memory-efficient approach  
+- Only small tiles remain in RAM at any time  
+- Suitable for very large \(N\)  
+
+---
+
+# Summary of Implementation Characteristics
+
+| Method | Optimization Level | Best Use Case |
 |------|------|------|
-| **Serial CPU** | Uses optimized BLAS matrix multiplication | Fastest |
-| **Multiprocessing CPU** | Python-level parallelism with process overhead | Slower due to overhead |
-| **Block-wise CPU** | Memory-efficient tiled computation | Slightly slower due to smaller operations |
+| **Serial CPU** | High (Internal BLAS) | Moderate \(N\), fastest baseline |
+| **Multiprocessing (Shared Memory)** | Medium (Custom) | Large \(N\), when BLAS scaling saturates |
+| **Block-wise CPU** | Memory-focused | Very large \(N\), limited RAM |
 
 ---
 
 # Key Conclusion
 
-The experiments demonstrate that **highly optimized numerical libraries can outperform naive parallelization strategies**.
+Parallelism is **not inherently beneficial**.
 
-Even though multiprocessing introduces parallel execution, its overhead and memory costs outweigh the benefits for moderate problem sizes.
+Even with shared memory optimization:
 
-In contrast, the serial implementation benefits from **optimized BLAS routines that already exploit hardware-level parallelism**, making it the most efficient approach for the tested dataset sizes.
-
-The block-wise strategy, while slower here, remains valuable for **large-scale problems where memory constraints prevent full matrix computation**, and it aligns with strategies used in GPU and high-performance computing environments.
-## Analysis of CPU Implementations for Correlation Matrix Computation
-
-We benchmarked three CPU-based implementations for computing the correlation matrix of (N) time series of length (T):
-
-1. **Serial CPU (NumPy)**
-2. **Multiprocessing CPU**
-3. **Block-wise CPU**
-
-Experiments were performed under two configurations:
-
-* **BLAS Multithreaded (default NumPy behavior)**
-* **BLAS Single-threaded (forcing NumPy to one thread)**
-
-The results reveal several important performance characteristics related to **parallelism, overhead, and optimized numerical libraries**.
+- Process management overhead remains significant  
+- Performance depends on problem size  
 
 ---
 
-# Why Parallel Processing is Slower than the Serial Implementation
+## Problem Regime Summary
 
-Although multiprocessing introduces parallelism at the Python level, the **serial implementation consistently performs faster in these experiments**. Several factors explain this behavior.
-
-## 1. Highly Optimized BLAS Operations in NumPy
-
-The serial implementation computes the correlation matrix primarily through the matrix multiplication
-
-( C_{ij} = \frac{Z_i Z_j^T}{T-1} )
-
-where (Z) is the standardized data matrix.
-
-NumPy internally delegates this operation to **BLAS (Basic Linear Algebra Subprograms)** libraries such as **OpenBLAS** or **MKL**, which are heavily optimized for:
-
-* SIMD vectorization
-* CPU cache utilization
-* Multithreaded execution
-* Low-level memory management
-
-As a result, even the "serial" Python code actually executes a **highly optimized native implementation**, making it extremely efficient.
+- **Small \(N\):** Serial (BLAS) is optimal due to zero overhead  
+- **Large \(N\):** Multiprocessing becomes competitive as compute dominates overhead  
+- **Extreme \(N\):** Block-wise with memmap is required to avoid memory failures  
 
 ---
 
-## 2. Overhead of Multiprocessing
-
-The multiprocessing implementation divides the work across multiple processes. However, this introduces significant overhead:
-
-### Process Creation
-
-Each worker process must be spawned and initialized, which is computationally expensive relative to the workload for moderate dataset sizes.
-
-### Inter-process Communication
-
-Large data arrays must be **copied or serialized** between processes. Since Python processes do not share memory by default, this results in additional memory allocation and copying costs.
-
-### Memory Duplication
-
-Each process may hold its own copy of the dataset or intermediate arrays, leading to:
-
-* Increased memory usage
-* Reduced cache locality
-* Higher memory bandwidth pressure
-
-These overheads often dominate the computation time for moderately sized problems.
-
----
-
-## 3. Loss of BLAS-Level Optimization
-
-When using multiprocessing, the computation is often broken into smaller chunks. These smaller matrix operations do not utilize BLAS optimizations as efficiently as the large matrix multiplication used in the serial implementation.
-
-As a result:
-
-* SIMD efficiency decreases
-* CPU cache utilization becomes worse
-* BLAS cannot fully exploit vectorized operations
-
-This further reduces performance relative to the serial implementation.
-
----
-
-# Behavior of the Block-wise Implementation
-
-The **block-wise approach** computes the correlation matrix in smaller tiles rather than computing the entire matrix at once.
-
-Conceptually:
-
-[
-C_{ij} = \frac{Z_i Z_j^T}{T-1}
-]
-
-where (Z_i) and (Z_j) represent blocks of rows from the standardized matrix.
-
-## Advantages
-
-The block-wise strategy is useful for:
-
-* **Reducing peak memory usage**
-* Handling **very large datasets**
-* Enabling **GPU-style tiling strategies**
-
-It is commonly used in high-performance computing when the full matrix does not fit in memory.
-
-## Performance Observations
-
-However, in the current experiments the block-wise implementation is slower than the serial implementation because:
-
-### Increased Loop Overhead
-
-The algorithm introduces nested loops over blocks, which adds Python-level control overhead.
-
-### Smaller Matrix Multiplications
-
-Each block multiplication is smaller, which reduces the efficiency of BLAS optimizations.
-
-Large matrix operations allow BLAS libraries to:
-
-* better utilize SIMD
-* improve cache reuse
-* amortize memory access costs
-
-Breaking the computation into smaller pieces reduces these benefits.
-
-### Additional Memory Operations
-
-Intermediate blocks must be repeatedly allocated and written back to the final matrix, increasing memory traffic.
-
----
-
-# Effect of BLAS Multithreading vs Single-threaded BLAS
-
-Two configurations were tested:
-
-### 1. BLAS Multithreaded (Default NumPy)
-
-In this configuration, NumPy's BLAS backend automatically uses multiple CPU threads for matrix operations.
-
-This means the **serial implementation is already parallelized internally**.
-
-As a result:
-
-* Serial computation becomes extremely fast.
-* Python-level multiprocessing provides little benefit.
-* Multiprocessing may even compete with BLAS threads for CPU resources.
-
-This explains the **very large performance gap** between serial and multiprocessing methods in the multithreaded BLAS results.
-
----
-
-### 2. BLAS Forced to Single Thread
-
-In the second experiment, BLAS was forced to run with a single thread using environment variables:
-
-```
-OPENBLAS_NUM_THREADS=1
-OMP_NUM_THREADS=1
-MKL_NUM_THREADS=1
-```
-
-This removes internal BLAS parallelism.
-
-Consequences:
-
-* Serial computation becomes slower.
-* Multiprocessing gains some relative advantage.
-
-However, even in this configuration multiprocessing still performs worse for most tested problem sizes because:
-
-* process management overhead remains significant
-* memory duplication costs remain high
-
-Only for very large (N) might multiprocessing begin to show benefits.
-
----
-
-# Memory Usage Observations
-
-Memory consumption increases significantly for both multiprocessing and block-wise approaches.
-
-### Multiprocessing Memory Overhead
-
-Each process may hold:
-
-* partial datasets
-* intermediate correlation results
-* temporary buffers
-
-This leads to higher overall memory usage compared to the serial implementation.
-
-### Block-wise Memory Overhead
-
-Block-wise computation introduces temporary matrices for each block multiplication, increasing peak memory usage during execution.
-
----
-
-# Summary of Observed Behavior
-
-| Method                  | Main Characteristics                           | Observed Performance                      |
-| ----------------------- | ---------------------------------------------- | ----------------------------------------- |
-| **Serial CPU**          | Uses optimized BLAS matrix multiplication      | Fastest                                   |
-| **Multiprocessing CPU** | Python-level parallelism with process overhead | Slower due to overhead                    |
-| **Block-wise CPU**      | Memory-efficient tiled computation             | Slightly slower due to smaller operations |
-
----
-
-# Key Conclusion
-
-The experiments demonstrate that **highly optimized numerical libraries can outperform naive parallelization strategies**.
-
-Even though multiprocessing introduces parallel execution, its overhead and memory costs outweigh the benefits for moderate problem sizes.
-
-In contrast, the serial implementation benefits from **optimized BLAS routines that already exploit hardware-level parallelism**, making it the most efficient approach for the tested dataset sizes.
-
-The block-wise strategy, while slower here, remains valuable for **large-scale problems where memory constraints prevent full matrix computation**, and it aligns with strategies used in GPU and high-performance computing environments.
+**Final Insight:**  
+The optimal strategy is determined by the **scale of the problem and system constraints**, not just the presence of parallelism.
 
