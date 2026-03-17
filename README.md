@@ -21,6 +21,21 @@ parallel_data_processing_engine/
 
 
 ```
+To run the run_experiment.py
+```
+# Baseline, single-thread BLAS
+python run_experiment.py --mode cpu --version baseline --blas single
+
+# Optimized, single-thread BLAS
+python run_experiment.py --mode cpu --version optimized --blas single
+
+# Baseline, multi-thread BLAS
+python run_experiment.py --mode cpu --version baseline --blas multi
+
+# Optimized, multi-thread BLAS
+python run_experiment.py --mode cpu --version optimized --blas multi
+
+```
 
 ### GPU Benchmark Extension Plan
 ```
