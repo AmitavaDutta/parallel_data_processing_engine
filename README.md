@@ -57,21 +57,21 @@ python run_experiment.py --mode gpu
 
 ## 🛠 Project Workflow & Responsibilities
 
-| Contributor | Project Phase | Targeted Metric |
-|-------------|---------------|----------------|
-| **Amitava** | CPU Implementation (Single/Multi-thread) | Compute Latency |
-|             | Block-wise Computation (Shared) | Cache Efficiency |
-| **Sipra** | GPU Implementation | Throughput (FLOPS) |
-|             | Block-wise Computation (Shared) | Memory Coalescing |
-| **Bhavini** | Numerical Consistency Check (CPU vs GPU) | Precision / Bit-error |
-|             | Complexity Analysis ($O(N^2)$) | Algorithmic Scale |
-|             | Overhead vs Computation Equilibrium | Break-even Point |
-|             | System Profiling (CPU/GPU/RAM bottlenecks) | Resource Saturation |
-|             | Code Revision & Optimization | Performance Tuning |
-|             | Experiment Execution & Plotting (Shared) | Visualization |
-| **Yashvita** | Bandwidth & Data Transfer Analysis | MB/s Transfer Rate |
-|             | Transfer Overhead Optimization | PCIe Latency |
-|             | Experiment Execution & Plotting (Shared) | Visualization |
+| Contributor | Project Phase |
+|-------------|---------------|
+| **Amitava** | CPU Implementation (Single/Multi-thread) | 
+|             | Block-wise Computation (Shared) | 
+| **Sipra** | GPU Implementation | 
+|             | Block-wise Computation (Shared) | 
+| **Bhavini** | Numerical Consistency Check (CPU vs GPU) |
+|             | Complexity Analysis ($O(N^2)$) |
+|             | Overhead vs Computation Equilibrium | 
+|             | System Profiling (CPU/GPU/RAM bottlenecks) | 
+|             | Code Revision & Optimization | 
+|             | Experiment Execution & Plotting (Shared) | 
+| **Yashvita** | Bandwidth & Data Transfer Analysis | 
+|             | Transfer Overhead Optimization | 
+|             | Experiment Execution & Plotting (Shared) | 
 
 ---
 
