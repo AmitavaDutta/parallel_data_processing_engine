@@ -62,11 +62,12 @@ The initial benchmarking was performed on randomly generated dataset. We will us
 |-------------|---------------|
 | **Amitava** | CPU Implementation (Single/Multi-thread) | 
 |             | Block-wise Computation (Shared) | 
-|             | Theoritical Complexity Analysis ($O(N^2)$) |
+|             | Theoritical Complexity Analysis ($O(N^2)$) for CPU|
 | **Sipra** | GPU Implementation | 
 |             | Block-wise Computation (Shared) | 
 | **Bhavini** | Numerical Consistency Check (CPU vs GPU) |
 |             | Overhead vs Computation Equilibrium | 
+|             | Complexity Analysis ($O(N^2)$) |
 |             | System Profiling (CPU/GPU/RAM bottlenecks) | 
 |             | Code Revision & Optimization | 
 |             | Experiment using real world data Execution & Plotting (Shared) | 
