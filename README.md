@@ -62,14 +62,14 @@ The initial benchmarking was performed on randomly generated dataset. We will us
 |-------------|---------------|
 | **Amitava** | CPU Implementation (Single/Multi-thread) | 
 |             | Block-wise Computation (Shared) | 
+|             | Theoritical Complexity Analysis ($O(N^2)$) |
 | **Sipra** | GPU Implementation | 
 |             | Block-wise Computation (Shared) | 
 | **Bhavini** | Numerical Consistency Check (CPU vs GPU) |
-|             | Complexity Analysis ($O(N^2)$) |
 |             | Overhead vs Computation Equilibrium | 
 |             | System Profiling (CPU/GPU/RAM bottlenecks) | 
 |             | Code Revision & Optimization | 
-|             | Experiment Execution & Plotting (Shared) | 
+|             | Experiment using real world data Execution & Plotting (Shared) | 
 | **Yashvita** | Bandwidth & Data Transfer Analysis | 
 |             | Transfer Overhead Optimization | 
 |             | Try out the implementation on climate dataset | 
