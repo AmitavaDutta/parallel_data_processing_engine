@@ -71,7 +71,7 @@ python run_experiment.py --mode gpu
 |             | Experiment Execution & Plotting (Shared) | 
 | **Yashvita** | Bandwidth & Data Transfer Analysis | 
 |             | Transfer Overhead Optimization | 
-|             | Experiment Execution & Plotting (Shared) | 
+|             | Try out the implementation on climate dataset | 
 
 ---
 
