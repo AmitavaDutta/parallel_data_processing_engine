@@ -54,7 +54,8 @@ python run_experiment.py --mode gpu
 > (For now only the CPU execution part is pipelined that way)
 
 ---
-
+### Testing the implementation on an actual dataset
+The initial benchmarking was performed on randomly generated dataset. We will use temperature data over a decade from a large number of locations (N) obtained from NASA POWER API. This is to ensure that the implementation works on actual datasets too.  
 ## 🛠 Project Workflow & Responsibilities
 
 | Contributor | Project Phase |
