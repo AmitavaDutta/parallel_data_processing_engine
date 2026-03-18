@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def generate_dataset(N, T, seed=0):
     """
@@ -54,6 +55,15 @@ def read_dataset(file_path):
     The CSV file should not contain headers or index columns. Each row should represent
     a time series, and each column should represent a time step.
     """
-    data = np.loadtxt(file_path, delimiter=',')
-    return data
+    # Read the dataset with a header and index column
+    data = np.loadtxt(file_path, delimiter=',', skiprows=1)
+    #print(data)
+    # remove the first column which is the date
+    #data = data[:, 1:]
+    #print(data.head())
+    data_transposed = data.T
+    return data_transposed
+
+
+#read_dataset("../global_temperature_comparison_modified.csv")
 
