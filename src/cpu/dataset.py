@@ -32,3 +32,28 @@ def generate_dataset(N, T, seed=0):
     
     return data
 
+
+def read_dataset(file_path):
+    """
+    Read a dataset from a CSV file.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the CSV file containing the dataset. The file should have N rows
+        and T columns, where N is the number of time series and T is the number
+        of time steps.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D NumPy array of shape (N, T) containing the dataset read from the CSV file.
+    
+    Notes
+    -----
+    The CSV file should not contain headers or index columns. Each row should represent
+    a time series, and each column should represent a time step.
+    """
+    data = np.loadtxt(file_path, delimiter=',')
+    return data
+
