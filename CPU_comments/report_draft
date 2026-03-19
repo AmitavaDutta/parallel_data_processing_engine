@@ -1,0 +1,187 @@
+# 1. Project Objectives (CPU Context)
+
+The primary objective was to establish a **high-performance CPU baseline** for correlation matrix estimation. This involved:
+
+- Implementing a **Serial Baseline** using vectorized NumPy operations  
+- Designing a **Multiprocessing Engine** using shared memory to minimize data duplication  
+- Developing a **Block-wise Computation strategy** to manage memory pressure and improve cache locality  
+- Evaluating **BLAS multithreading vs. manual process-level parallelism**  
+
+---
+
+# 2. Algorithms & Mathematical Process
+
+The engine computes the **Pearson correlation matrix** for \(N\) time series of length \(T\).
+
+### Standardization
+
+\[
+Z = \frac{X - \mu}{\sigma}
+\]
+
+### Matrix Product
+
+\[
+C = \frac{1}{T-1}(Z Z^T)
+\]
+
+### Complexity
+
+\[
+O(N^2 \cdot T)
+\]
+
+For \(N = 20{,}000\):
+
+- Total elements ≈ **400 million**
+- Requires efficient **memory management + parallel execution**
+
+---
+
+## Symmetry Optimization
+
+The correlation matrix satisfies:
+
+\[
+C_{ij} = C_{ji}
+\]
+
+In theory:
+
+- Only upper triangle needs computation  
+- Reduces operations by ~50%  
+
+---
+
+# 3. Technical Analysis & Current Status
+
+---
+
+## The "Oversubscription" Trap (Multithread BLAS)
+
+### Observation
+
+- Serial CPU (NumPy) was fastest  
+- Parallel implementations showed **negative speedup (< 1.0)**  
+
+### Reason
+
+- NumPy’s `@` already uses all CPU cores via BLAS  
+- Adding multiprocessing causes:
+
+  - CPU oversubscription  
+  - Context switching  
+  - IPC overhead  
+
+### Insight
+
+```
+Hardware-level parallelism > Python-level parallelism
+```
+
+---
+
+## The Success of Manual Parallelism (Single-thread BLAS)
+
+When BLAS is restricted:
+
+```bash
+OPENBLAS_NUM_THREADS=1
+```
+
+### Results
+
+- Multiprocessing achieved **~3.5× speedup (4 cores)** for large \(N\)  
+- Confirms shared-memory design effectively bypasses the GIL  
+
+---
+
+## The Optimization Paradox
+
+### Observation
+
+- "Optimized" version (upper triangle only) was **slower**  
+- "Baseline" (full matrix multiplication) was **faster**  
+
+### Reason
+
+- Optimized version uses Python loops + many `np.dot` calls  
+- Baseline uses **one large BLAS call**  
+
+### Insight
+
+```
+Fewer operations ≠ faster execution
+```
+
+Performance depends on:
+
+- C-level vectorization  
+- Reduced Python interpreter overhead  
+
+---
+
+## Memory Scaling
+
+- Memory scales as \(O(N^2)\)  
+
+### Observations
+
+| Implementation | Memory Usage (N = 20,000) |
+|--------------|---------------------------|
+| Serial CPU | ~4 GB |
+| Multiprocessing | ~15 GB |
+
+### Insight
+
+- Multiprocessing introduces **memory overhead ("Memory Tax")**  
+- Critical constraint for large geophysical datasets  
+
+---
+
+# 4. Team Work Distribution
+
+### Student A (CPU Lead)
+
+- Implemented:
+  - Serial CPU  
+  - Multiprocessing (Shared Memory)  
+  - Block-wise computation  
+- Benchmarked across:
+  - BLAS Single-thread  
+  - BLAS Multi-thread  
+- Developed:
+  - Visualization tools  
+  - Speedup + memory analysis  
+
+---
+
+### Student B / C / D
+
+- GPU implementation (CUDA / CuPy)  
+- System integration  
+- Final report synthesis  
+
+---
+
+# Expected Output (CPU Section)
+
+The final CPU engine establishes a **performance baseline**:
+
+- Handles \(N = 20{,}000\)  
+- Runtime: **< 5 seconds** (Multithreaded BLAS)  
+
+---
+
+## Final Insight
+
+This defines the:
+
+```
+Performance Floor
+```
+
+Any GPU implementation must:
+
+- Exceed this runtime  
+- Justify **CPU → GPU memory transfer overhead**
