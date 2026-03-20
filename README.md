@@ -80,3 +80,7 @@ The initial benchmarking was performed on randomly generated dataset. We will us
 # Presentation
 
 [View the Presentation](https://docs.google.com/presentation/d/1Owx46RyIDORviqmCtD00_zH3qimb5DthErWeH7hPy30/edit?usp=sharing)
+
+
+# 2 page report of the mini-project
+Added to github
