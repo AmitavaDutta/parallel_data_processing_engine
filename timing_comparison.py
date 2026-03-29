@@ -44,22 +44,24 @@ def cpu_corr(data):
     np.corrcoef(data)
     return time.time() - start
 
+base_data = load_data()
 
-def run_experiment():
-    data = load_data()
+factors = [1, 2, 5, 10, 20]
 
-    # make data bigger
-    data = np.tile(data, (10, 1))
+base_data = load_data()
 
+factors = [1, 2, 5, 10, 20]
+
+for f in factors:
+    print(f"\n--- Scale factor: {f} ---")
+
+    data = np.tile(base_data, (f, 1))
     print("Data shape:", data.shape)
 
-    # CPU timing
     cpu_time = cpu_corr(data)
 
-    # GPU setup
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # GPU timing
     _, gpu_time, gpu_mem = gpu_correlation_full(data, device)
 
     print("\n--- Results ---")
