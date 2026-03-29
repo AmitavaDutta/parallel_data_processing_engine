@@ -1,7 +1,12 @@
 import numpy as np
 import time
 import torch
+import matplotlib.pyplot as plt
 
+from cancer_data import load_data
+
+
+# ---------------- GPU CORRELATION ----------------
 def gpu_correlation_full(data: np.ndarray, device: torch.device):
     """Compute the entire N×N correlation matrix in a single GPU operation."""
     if device.type != "cuda": return None, 0, 0
@@ -32,25 +37,21 @@ def gpu_correlation_full(data: np.ndarray, device: torch.device):
 
     return corr_matrix, exec_time, peak_mem_mb
 
-import numpy as np
-import time
-import torch
-
-from cancer_data import load_data
-
-
+# ---------------- CPU CORRELATION ----------------
 def cpu_corr(data):
     start = time.time()
     np.corrcoef(data)
     return time.time() - start
 
+# ---------------- MAIN EXPERIMENT ----------------
 base_data = load_data()
 
 factors = [1, 2, 5, 10, 20]
 
-base_data = load_data()
+cpu_times = []
+sizes = []
 
-factors = [1, 2, 5, 10, 20]
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 for f in factors:
     print(f"\n--- Scale factor: {f} ---")
@@ -58,10 +59,14 @@ for f in factors:
     data = np.tile(base_data, (f, 1))
     print("Data shape:", data.shape)
 
+    N = data.shape[0]
+    sizes.append(N)
+
+    # CPU timing
     cpu_time = cpu_corr(data)
+    cpu_times.append(cpu_time)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    # GPU timing (if available)
     _, gpu_time, gpu_mem = gpu_correlation_full(data, device)
 
     print("\n--- Results ---")
@@ -72,3 +77,18 @@ for f in factors:
         print(f"GPU memory: {gpu_mem:.2f} MB")
     else:
         print("GPU not available")
+
+
+# ---------------- COMPLEXITY ANALYSIS PRINT ----------------
+print("\n--- Complexity Analysis ---")
+for i in range(1, len(sizes)):
+    growth = cpu_times[i] / cpu_times[i - 1]
+    print(f"N: {sizes[i-1]} → {sizes[i]} | Time growth: {growth:.2f}x")
+
+# ---------------- PLOTTING ----------------
+plt.plot(sizes, cpu_times, marker='o')
+plt.xlabel("Number of Time Series (N)")
+plt.ylabel("CPU Time (seconds)")
+plt.title("Scaling of Correlation Computation (O(N^2))")
+plt.grid()
+plt.show()
