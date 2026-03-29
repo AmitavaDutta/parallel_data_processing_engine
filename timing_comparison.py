@@ -1,3 +1,7 @@
+import numpy as np
+import time
+import torch
+
 def gpu_correlation_full(data: np.ndarray, device: torch.device):
     """Compute the entire N×N correlation matrix in a single GPU operation."""
     if device.type != "cuda": return None, 0, 0
