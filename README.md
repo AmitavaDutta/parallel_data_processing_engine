@@ -39,7 +39,7 @@ The engine uses a **CLI-based approach** to toggle between different optimizatio
 | Optimized (Single-thread BLAS) | `python run_experiment.py --mode cpu --version optimized --blas single` |
 | Baseline (Multi-thread BLAS) | `python run_experiment.py --mode cpu --version baseline --blas multi` |
 | Optimized (Multi-thread BLAS) | `python run_experiment.py --mode cpu --version optimized --blas multi` |
-| If real data is to be used add the following line (with proper data path and file name). And please follow the dataformat | `--dataset real --data_path data/global_temp_use.csv`|
+| If real data is to be used add the following line (with proper data path and file name) and data id. And please follow the dataformat | `--dataset real --data_path data/global_temp_use.csv --data_id global_temp`|
 
 
 ### GPU Benchmarks (Planned)
