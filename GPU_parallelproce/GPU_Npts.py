@@ -3,10 +3,9 @@ GPU vs CPU Correlation Matrix Computation & Benchmarking
 DS Practice Project
 
 This script calculates an N×N correlation matrix for N time series.
-It compares three approaches:
-1. CPU (NumPy) - Standard baseline.
-2. GPU (PyTorch Full) - Computes the entire matrix in one operation.
-3. GPU (PyTorch Blockwise) - Computes the matrix in chunks to save VRAM.
+It has the following two approaches:
+1. GPU (PyTorch Full) - Computes the entire matrix in one operation.
+2. GPU (PyTorch Blockwise) - Computes the matrix in chunks to save VRAM.
 
 It then visualizes the time and memory differences using Matplotlib.
 """
@@ -40,8 +39,8 @@ def get_device():
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 2: Synthetic Dataset Generation
 # ─────────────────────────────────────────────────────────────────────────────
-# To benchmark the hardware, we need raw data. This function uses NumPy to 
-# generate N random time series, each with T time steps. We use float32 
+# To benchmark the hardware, we need raw data. This function uses NumPy to
+# generate N random time series, each with T time steps. We use float32
 # because GPUs process 32-bit floats much faster than 64-bit floats.
 def generate_time_series(N: int, T: int, seed: int = 42) -> np.ndarray:
     """Generate a random dataset of N time series, each of length T."""
@@ -51,48 +50,49 @@ def generate_time_series(N: int, T: int, seed: int = 42) -> np.ndarray:
           f"({data.nbytes / 1024**2:.1f} MB as float32)")
     return data
 
-
+'''
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 3: CPU Baseline Correlation
 # ─────────────────────────────────────────────────────────────────────────────
-# This acts as our baseline. We use NumPy's built-in `corrcoef` function 
-# to calculate the correlation matrix entirely on the CPU. We also use 
+# This acts as our baseline. We use NumPy's built-in `corrcoef` function
+# to calculate the correlation matrix entirely on the CPU. We also use
 # `tracemalloc` to monitor how much RAM the CPU uses during this calculation.
 def cpu_correlation(data: np.ndarray):
     """Compute correlation matrix on CPU using NumPy and track memory/time."""
     print("\n--- Running CPU Baseline ---")
     tracemalloc.start()  # Start tracking CPU memory
     t0 = time.perf_counter()
-    
+
     # Calculate correlation matrix using NumPy
     corr_matrix = np.corrcoef(data)
-    
+
     t1 = time.perf_counter()
-    
+
     # Get peak memory usage during the operation
     _, peak_mem_bytes = tracemalloc.get_traced_memory()
     tracemalloc.stop()
-    
+
     exec_time = t1 - t0
     peak_mem_mb = peak_mem_bytes / (1024 * 1024)
-    
+
     print(f"[CPU] Execution Time: {exec_time:.4f}s")
     print(f"[CPU] Peak Memory: {peak_mem_mb:.1f} MB")
-    
+
     return corr_matrix, exec_time, peak_mem_mb
+
 '''
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 4: Full-Matrix GPU Correlation (Strategy A)
 # ─────────────────────────────────────────────────────────────────────────────
 # This strategy moves the data to the GPU and computes the entire N×N matrix
-# at once using PyTorch. It standardizes the data (Z-score) and then performs 
-# a matrix multiplication (Z @ Z.T). This is the fastest method but uses the 
+# at once using PyTorch. It standardizes the data (Z-score) and then performs
+# a matrix multiplication (Z @ Z.T). This is the fastest method but uses the
 # most VRAM, which can crash if N is extremely large.
 def gpu_correlation_full(data: np.ndarray, device: torch.device):
     """Compute the entire N×N correlation matrix in a single GPU operation."""
     if device.type != "cuda": return None, 0, 0
     print("\n--- Running GPU Full Matrix ---")
-    
+
     torch.cuda.reset_peak_memory_stats() # Reset memory tracker
     t0 = time.perf_counter()
 
@@ -109,57 +109,16 @@ def gpu_correlation_full(data: np.ndarray, device: torch.device):
 
     torch.cuda.synchronize() # Wait for GPU to finish
     t1 = time.perf_counter()
-    
+
     exec_time = t1 - t0
     peak_mem_mb = torch.cuda.max_memory_allocated(0) / (1024**2)
-    
+
     print(f"[GPU Full] Execution Time: {exec_time:.4f}s")
     print(f"[GPU Full] Peak VRAM: {peak_mem_mb:.1f} MB")
-    
+
     return corr_matrix, exec_time, peak_mem_mb
 
-'''
-# ─────────────────────────────────────────────────────────────────────────────
-# MODIFIED SECTION 4: Full-Matrix GPU Correlation with Detailed Timing
-# ─────────────────────────────────────────────────────────────────────────────
-def gpu_correlation_full(data: np.ndarray, device: torch.device):
-    if device.type != "cuda": return None, {}
-    print("\n--- Running GPU Full Matrix (Detailed Timing) ---")
 
-    torch.cuda.reset_peak_memory_stats()
-    metrics = {}
-
-    # 1. H2D Transfer (Host to Device)
-    torch.cuda.synchronize()
-    t_start = time.perf_counter()
-    X = torch.tensor(data, device=device)
-    torch.cuda.synchronize()
-    metrics['h2d_time'] = time.perf_counter() - t_start
-
-    # 2. Pure Computation
-    t_start = time.perf_counter()
-    mean = X.mean(dim=1, keepdim=True)
-    std  = X.std(dim=1, keepdim=True, unbiased=False)
-    std  = torch.clamp(std, min=1e-8)
-    Z    = (X - mean) / std
-    T_steps = data.shape[1]
-    corr_matrix = torch.mm(Z, Z.T) / T_steps
-    corr_matrix = torch.clamp(corr_matrix, -1.0, 1.0)
-    torch.cuda.synchronize()
-    metrics['compute_time'] = time.perf_counter() - t_start
-
-    # 3. D2H Transfer (Device to Host)
-    t_start = time.perf_counter()
-    final_matrix_cpu = corr_matrix.cpu().numpy()
-    torch.cuda.synchronize()
-    metrics['d2h_time'] = time.perf_counter() - t_start
-
-    metrics['total_time'] = metrics['h2d_time'] + metrics['compute_time'] + metrics['d2h_time']
-    metrics['peak_mem'] = torch.cuda.max_memory_allocated(0) / (1024**2)
-
-    print(f"[GPU Full] H2D: {metrics['h2d_time']:.4f}s | Compute: {metrics['compute_time']:.4f}s | D2H: {metrics['d2h_time']:.4f}s")
-    return final_matrix_cpu, metrics
-'''
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 5: Block-Wise GPU Correlation (Strategy B)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -171,7 +130,7 @@ def gpu_correlation_blockwise(data: np.ndarray, device: torch.device, block_size
     """Compute the N×N correlation matrix in blocks to limit peak GPU memory."""
     if device.type != "cuda": return None, 0, 0
     print(f"\n--- Running GPU Blockwise (Block Size: {block_size}) ---")
-    
+
     torch.cuda.reset_peak_memory_stats()
     t0 = time.perf_counter()
 
@@ -207,68 +166,15 @@ def gpu_correlation_blockwise(data: np.ndarray, device: torch.device, block_size
 
     torch.cuda.synchronize()
     t1 = time.perf_counter()
-    
+
     exec_time = t1 - t0
     peak_mem_mb = torch.cuda.max_memory_allocated(0) / (1024**2)
-    
+
     print(f"[GPU Block] Execution Time: {exec_time:.4f}s")
     print(f"[GPU Block] Peak VRAM: {peak_mem_mb:.1f} MB")
-    
+
     return corr_matrix, exec_time, peak_mem_mb
-'''
-# ─────────────────────────────────────────────────────────────────────────────
-# MODIFIED SECTION 5: Block-Wise GPU Correlation with Detailed Timing
-# ─────────────────────────────────────────────────────────────────────────────
-def gpu_correlation_blockwise(data: np.ndarray, device: torch.device, block_size: int = 1024):
-    if device.type != "cuda": return None, {}
-    print(f"\n--- Running GPU Blockwise (Detailed Timing, Size: {block_size}) ---")
 
-    torch.cuda.reset_peak_memory_stats()
-    metrics = {'h2d_time': 0, 'compute_time': 0, 'd2h_time': 0}
-    N, T_steps = data.shape
-
-    # 1. Transfer input data (H2D)
-    torch.cuda.synchronize()
-    t_start = time.perf_counter()
-    X = torch.tensor(data, device=device)
-    torch.cuda.synchronize()
-    metrics['h2d_time'] = time.perf_counter() - t_start
-
-    # 2. Computation Phase (Looping through blocks)
-    t_comp_start = time.perf_counter()
-    mean = X.mean(dim=1, keepdim=True)
-    std  = X.std(dim=1, keepdim=True, unbiased=False)
-    std  = torch.clamp(std, min=1e-8)
-    Z    = (X - mean) / std
-
-    corr_matrix = torch.zeros((N, N), device=device, dtype=torch.float32)
-    num_blocks = (N + block_size - 1) // block_size
-
-    for i in range(num_blocks):
-        i_start, i_end = i * block_size, min((i + 1) * block_size, N)
-        Zi = Z[i_start:i_end, :]
-        for j in range(i, num_blocks):
-            j_start, j_end = j * block_size, min((j + 1) * block_size, N)
-            Zj = Z[j_start:j_end, :]
-            block_corr = torch.mm(Zi, Zj.T) / T_steps
-            corr_matrix[i_start:i_end, j_start:j_end] = block_corr
-            if i != j:
-                corr_matrix[j_start:j_end, i_start:i_end] = block_corr.T
-
-    torch.cuda.synchronize()
-    metrics['compute_time'] = time.perf_counter() - t_comp_start
-
-    # 3. Transfer Result back (D2H)
-    t_start = time.perf_counter()
-    final_matrix_cpu = corr_matrix.cpu().numpy()
-    torch.cuda.synchronize()
-    metrics['d2h_time'] = time.perf_counter() - t_start
-
-    metrics['total_time'] = metrics['h2d_time'] + metrics['compute_time'] + metrics['d2h_time']
-    metrics['peak_mem'] = torch.cuda.max_memory_allocated(0) / (1024**2)
-
-    print(f"[GPU Block] H2D: {metrics['h2d_time']:.4f}s | Compute: {metrics['compute_time']:.4f}s | D2H: {metrics['d2h_time']:.4f}s")
-    return final_matrix_cpu, metrics
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 6: Visualization
@@ -277,9 +183,9 @@ def gpu_correlation_blockwise(data: np.ndarray, device: torch.device, block_size
 # blocks and creates a Matplotlib figure with two bar charts side-by-side.
 # It makes it visually obvious how much faster (or memory-efficient) the GPU is.
 def plot_comparisons(N, T, times, memories):
-    """Generate bar charts to compare CPU and GPU performance."""
-    labels = ['CPU (NumPy)', 'GPU (Full)', 'GPU (Blockwise)']
-    
+    """Generate bar charts to help visualise GPU performance."""
+    labels = ['GPU (Full)', 'GPU (Blockwise)']
+
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
     fig.suptitle(f'Performance Comparison: {N} Time Series, {T} Steps', fontsize=14)
 
@@ -305,31 +211,9 @@ def plot_comparisons(N, T, times, memories):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# REVISED SECTION 6: Visualization (Stacked Bar Chart for Overhead)
-# ─────────────────────────────────────────────────────────────────────────────
-def plot_breakdown(N, T, cpu_metrics, full_metrics, block_metrics):
-    labels = ['GPU Full', 'GPU Blockwise']
-    h2d = [full_metrics['h2d_time'], block_metrics['h2d_time']]
-    comp = [full_metrics['compute_time'], block_metrics['compute_time']]
-    d2h = [full_metrics['d2h_time'], block_metrics['d2h_time']]
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.bar(labels, h2d, label='H2D (Data Up)')
-    ax.bar(labels, comp, bottom=h2d, label='Pure Computation')
-    ax.bar(labels, d2h, bottom=[i+j for i,j in zip(h2d, comp)], label='D2H (Result Down)')
-
-    # Add CPU baseline as a horizontal line for perspective
-    ax.axhline(y=cpu_metrics['time'], color='r', linestyle='--', label=f'CPU Baseline ({cpu_metrics["time"]:.2f}s)')
-
-    ax.set_ylabel('Time (Seconds)')
-    ax.set_title(f'GPU Overhead Breakdown (N={N}, T={T})')
-    ax.legend()
-    plt.show()
-
-# ─────────────────────────────────────────────────────────────────────────────
 # SECTION 7: Main Experiment Runner
 # ─────────────────────────────────────────────────────────────────────────────
-# The central controller. It generates the data, calls the CPU and GPU 
+# The central controller. It generates the data, calls the CPU and GPU
 # functions, stores the results, and then triggers the plotting function.
 def run_experiment(N: int, T: int, block_size: int = 512):
     print("\n" + "═" * 60)
@@ -340,21 +224,20 @@ def run_experiment(N: int, T: int, block_size: int = 512):
     data = generate_time_series(N, T)
 
     # Run CPU
-    _, cpu_time, cpu_mem = cpu_correlation(data)
-    
+    #_, cpu_time, cpu_mem = cpu_correlation(data)
 
     if device.type == "cuda":
         # Run GPU Full
         _, gpu_f_time, gpu_f_mem = gpu_correlation_full(data, device)
-        
+
         # Run GPU Blockwise
         _, gpu_b_time, gpu_b_mem = gpu_correlation_blockwise(data, device, block_size)
-        
+
         # Plot Results
-        times = [cpu_time, gpu_f_time, gpu_b_time]
-        memories = [cpu_mem, gpu_f_mem, gpu_b_mem]
+        times = [gpu_f_time, gpu_b_time]
+        memories = [gpu_f_mem, gpu_b_mem]
         plot_comparisons(N, T, times, memories)
-        
+
         # Cleanup
         torch.cuda.empty_cache()
     else:
@@ -366,18 +249,5 @@ def run_experiment(N: int, T: int, block_size: int = 512):
 # ─────────────────────────────────────────────────────────────────────────────
 # This is where the script begins execution.
 if __name__ == "__main__":
-    # N=10000 will create a 10,000 x 10,000 matrix (100 million correlations!)
-#    run_experiment(N=10000, T=2000, block_size=2048)
-    N, T = 8000, 1000
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    data = np.random.standard_normal((N, T)).astype(np.float32)
-
-    # CPU
-    _, cpu_time, cpu_mem = cpu_correlation(data)
-    cpu_metrics = {'time': cpu_time, 'mem': cpu_mem}
-
-    # GPU
-    _, full_m = gpu_correlation_full(data, device)
-    _, block_m = gpu_correlation_blockwise(data, device, block_size=2048)
-
-    plot_breakdown(N, T, 0, full_m, block_m)
+    # You can change these numbers. N=5000 might take a few seconds on CPU.
+    run_experiment(N=5000, T=1000, block_size=1024)
