@@ -9,20 +9,26 @@ The project focuses on identifying the **break-even point** where computational 
 
 ```
 parallel_data_processing_engine/
-├── run_experiment.py         # Main entry point for benchmarking
-├── results/                  # Auto-generated experiment outputs
+├── run_experiment.py          # Main entry point (CPU + GPU unified CLI)
+├── results/                   # Auto-generated experiment outputs
+│
 └── src/
-    ├── cpu/                  # CPU-based implementations
+    ├── dataset.py             # Shared: data loading + synthetic generation
+│
+    ├── cpu/                   # CPU-based implementations
     │   ├── __init__.py
-    │   ├── dataset.py        # Data loading and synthetic generation
-    │   ├── serial_cpu.py     # Single-threaded implementation
+    │   ├── serial_cpu.py      # Single-threaded correlation
     │   ├── parallel_cpu.py   # Multi-threaded implementation
     │   ├── block_cpu.py      # Cache-optimized block computation
-    │   ├── benchmark.py      # CPU performance metrics
-    │   └── visualize.py      # Plotting and results analysis
-    │
-    └── gpu/                  # GPU-based implementations (WIP)
-        └── __init__.py       # Future CUDA/OpenCL implementations
+    │   ├── benchmark.py      # CPU benchmarking logic
+    │   └── visualize.py      # CPU plotting (runtime, speedup, memory, corr)
+│
+    └── gpu/                   # GPU-based implementations
+        ├── __init__.py
+        ├── gpu_correlation.py   # Full + blockwise GPU correlation
+        ├── gpu_benchmark.py     # GPU benchmarking logic
+        └── gpu_visualize.py     # GPU plotting (runtime, memory, corr)
+
 ```
 
 ---
