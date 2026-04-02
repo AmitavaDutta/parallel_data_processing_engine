@@ -34,7 +34,6 @@ from src.cpu.serial_cpu import compute_correlation_serial
 # CPU Experiment
 # -------------------------------------------------------
 def run_cpu_experiments():
-    # Determine dataset name for folder
     dataset_name = args.dataset
     if args.dataset == "real":
         if args.data_id is None:
@@ -43,7 +42,6 @@ def run_cpu_experiments():
 
     print(f"\nRunning CPU Experiments | version={args.version} | blas={args.blas} | dataset={dataset_name}\n")
 
-    # Directory structure
     base_dir = f"results/cpu/blas_{args.blas}/{args.version}/{dataset_name}"
     os.makedirs(base_dir, exist_ok=True)
 
@@ -71,8 +69,12 @@ def run_cpu_experiments():
     for N in N_values:
         X = generate_dataset(N, T) if args.dataset == "random" else X_full[:N, :T]
 
-        result = run_benchmark(N=N, T=T, X=X, num_workers=num_workers,
-                               block_size=block_size, version=version)
+        result = run_benchmark(
+            N=N, T=T, X=X,
+            num_workers=num_workers,
+            block_size=block_size,
+            version=version
+        )
         result["version"] = version
         result["blas_mode"] = args.blas
         result["dataset"] = dataset_name
@@ -88,21 +90,114 @@ def run_cpu_experiments():
     print(f"\nResults saved to {results_csv_path}")
 
     # ---------------------
-    # Example correlation for plots
+    # Example correlation
     # ---------------------
     example_N = min(200, N_values[-1])
     X_example = generate_dataset(example_N, T) if args.dataset == "random" else X_full[:example_N, :T]
     C = compute_correlation_serial(X_example)
+
     file_prefix = f"{dataset_name}_{version}_{args.blas}"
-    generate_all_plots(results_df,C,output_dir=base_dir,mode="cpu",version=version,file_prefix=file_prefix)
+
+    generate_all_plots(
+        results_df,
+        C,
+        output_dir=base_dir,
+        mode="cpu",
+        version=version,
+        file_prefix=file_prefix
+    )
 
 
 # -------------------------------------------------------
-# GPU Placeholder
+# GPU Experiments
 # -------------------------------------------------------
 def run_gpu_experiments():
-    print("\nGPU mode selected\n")
-    print("Not implemented")
+    dataset_name = args.dataset
+    if args.dataset == "real":
+        if args.data_id is None:
+            raise ValueError("For real dataset, provide --data_id <name>")
+        dataset_name = args.data_id
+
+    print(f"\nRunning GPU Experiments | version={args.version} | dataset={dataset_name}\n")
+
+    # Local imports (GPU only)
+    from src.gpu.gpu_benchmark import run_gpu_benchmark
+    from src.gpu.gpu_visualize import generate_all_plots
+    from src.gpu.gpu_correlation import get_device, gpu_correlation_full
+
+    device = get_device()
+    if device.type != "cuda":
+        print("\n[GPU] No CUDA GPU available. Exiting GPU mode.\n")
+        return
+
+    base_dir = f"results/gpu/{args.version}/{dataset_name}"
+    os.makedirs(base_dir, exist_ok=True)
+
+    block_size = 1024
+    version = args.version
+
+    # ---------------------
+    # Load dataset
+    # ---------------------
+    if args.dataset == "real":
+        X_full = read_dataset(args.data_path)
+        print(f"Loaded dataset: shape = {X_full.shape}")
+        N_full, T = X_full.shape
+        N_values = sorted(list(set([1,2,3,4,5,6,7,8,9,10, N_full])))
+    else:
+        T = 2000
+        N_values = [500,1000,2000,4000,8000,10000,15000,20000]
+
+    results_list = []
+
+    # ---------------------
+    # Run benchmarks
+    # ---------------------
+    for N in N_values:
+        X = generate_dataset(N, T) if args.dataset == "random" else X_full[:N, :T]
+
+        result = run_gpu_benchmark(
+            N=N, T=T, X=X,
+            block_size=block_size,
+            version=version,
+            device=device
+        )
+        result["version"] = version
+        result["dataset"] = dataset_name
+        results_list.append(result)
+
+    results_df = pd.DataFrame(results_list)
+
+    # ---------------------
+    # Save CSV
+    # ---------------------
+    results_csv_path = f"{base_dir}/results_{dataset_name}_{version}_gpu.csv"
+    results_df.to_csv(results_csv_path, index=False)
+    print(f"\nResults saved to {results_csv_path}")
+
+    # ---------------------
+    # Example correlation
+    # ---------------------
+    example_N = min(200, N_values[-1])
+    X_example = (
+        generate_dataset(example_N, T).astype("float32")
+        if args.dataset == "random"
+        else X_full[:example_N, :T].astype("float32")
+    )
+
+    C, _, _ = gpu_correlation_full(X_example, device)
+
+    file_prefix = f"{dataset_name}_{version}_gpu"
+
+    generate_all_plots(
+        results_df,
+        C,
+        output_dir=base_dir,
+        mode="gpu",
+        version=version,
+        file_prefix=file_prefix
+    )
+
 
 # -------------------------------------------------------
 # Main
