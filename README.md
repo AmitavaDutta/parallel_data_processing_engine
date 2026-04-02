@@ -33,7 +33,7 @@ parallel_data_processing_engine/
 
 ---
 
-## # ⚡ Running Experiments
+## ⚡ Running Experiments
 
 The engine provides a **CLI-based interface** to run CPU and GPU benchmarks with flexible configurations.
 
