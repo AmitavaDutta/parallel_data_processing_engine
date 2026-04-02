@@ -58,7 +58,7 @@ def run_cpu_experiments():
         X_full = read_dataset(args.data_path)
         print(f"Loaded dataset: shape = {X_full.shape}")
         N_full, T = X_full.shape
-        N_values = sorted(list(set([2, 5, 10, N_full])))
+        N_values = sorted(list(set([1,2,3,4,5,6,7,8,9,10, N_full])))
     else:
         T = 2000
         N_values = [500,1000,2000,4000,8000,10000,15000,20000]
@@ -93,8 +93,9 @@ def run_cpu_experiments():
     example_N = min(200, N_values[-1])
     X_example = generate_dataset(example_N, T) if args.dataset == "random" else X_full[:example_N, :T]
     C = compute_correlation_serial(X_example)
+    file_prefix = f"{dataset_name}_{version}_{args.blas}"
+    generate_all_plots(results_df,C,output_dir=base_dir,mode="cpu",version=version,file_prefix=file_prefix)
 
-    generate_all_plots(results_df, C, output_dir=base_dir, mode="cpu", version=version)
 
 # -------------------------------------------------------
 # GPU Placeholder

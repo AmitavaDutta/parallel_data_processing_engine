@@ -62,9 +62,9 @@ def plot_correlation_matrix(C, save_path):
 # -------------------------------------------------------
 # Generate All Plots
 # -------------------------------------------------------
-def generate_all_plots(results_df, C, output_dir="results", mode="cpu", version="baseline"):
+def generate_all_plots(results_df, C, output_dir="results", mode="cpu", version="baseline", file_prefix=""):
     os.makedirs(output_dir, exist_ok=True)
-    plot_runtime(results_df, f"{output_dir}/{mode}_runtime.png", version)
-    plot_speedup(results_df, f"{output_dir}/{mode}_speedup.png", version)
-    plot_memory(results_df, f"{output_dir}/{mode}_memory.png", version)
-    plot_correlation_matrix(C, f"{output_dir}/{mode}_correlation_matrix.png")
+    plot_runtime(results_df, f"{output_dir}/{file_prefix}_{mode}_runtime.png", version)
+    plot_speedup(results_df, f"{output_dir}/{file_prefix}_{mode}_speedup.png", version)
+    plot_memory(results_df, f"{output_dir}/{file_prefix}_{mode}_memory.png", version)
+    plot_correlation_matrix(C, f"{output_dir}/{file_prefix}_{mode}_correlation_matrix.png")
