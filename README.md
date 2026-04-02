@@ -97,7 +97,7 @@ python run_experiment.py --mode gpu --version optimized --dataset real --data_pa
 - GPU execution **automatically detects available CUDA devices**:
 
 ```
-[Device] GPU detected: NVIDIA T1000 8GB (7.6 GB VRAM)
+[Device] CUDA-compatible GPU detected
 ```
 
 - If no GPU is available:
