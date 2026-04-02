@@ -7,13 +7,12 @@ It has the following two approaches:
 1. GPU (PyTorch Full) - Computes the entire matrix in one operation.
 2. GPU (PyTorch Blockwise) - Computes the matrix in chunks to save VRAM.
 
-It then visualizes the time and memory differences using Matplotlib.
+It then visualizes the time and memory usage using Matplotlib.
 """
 
 import torch
 import numpy as np
 import time
-import tracemalloc  # For tracking CPU memory usage
 import matplotlib.pyplot as plt
 
 
