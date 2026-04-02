@@ -1,1 +1,36 @@
+## The summary of the GPU code is as follows:
+
+
+- **Device:** GPU (Tesla T4, 14.6 GB VRAM)  
+- **Dataset:** 5000 time series, each of length 1000  
+- **Memory Footprint:** 19.1 MB (float32)
+
+---
+
+## Performance Results
+
+### 🔹 GPU Full Matrix Method
+- **Execution Time:** 0.0262 s  
+- **Peak VRAM Usage:** 238.3 MB  
+
+### 🔹 GPU Blockwise Method (Block Size = 1024)
+- **Execution Time:** 0.0217 s  
+- **Peak VRAM Usage:** 337.4 MB  
+
+---
+
+## Key Observations
+
+- The **blockwise approach** is slightly **faster** than the full matrix method.  
+- However, it incurs **higher peak VRAM usage**.  
+- There is a **trade-off between speed and memory efficiency** depending on the chosen method.
+
+---
+
+## Visualisation
+
+The visualisation of the output obtained after running this code is available in:
+parallel_data_processing_engine/GPU_parallelproce/gpu_correlation.png
+
+
 
