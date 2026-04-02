@@ -33,33 +33,105 @@ parallel_data_processing_engine/
 
 ---
 
-## ⚡ Running Experiments
+## # ⚡ Running Experiments
 
-The engine uses a **CLI-based approach** to toggle between different optimization levels and BLAS (Basic Linear Algebra Subprograms) configurations.
+The engine provides a **CLI-based interface** to run CPU and GPU benchmarks with flexible configurations.
 
-### CPU Benchmarks
+---
 
-| Configuration | Command |
-|---------------|---------|
-| Baseline (Single-thread BLAS) | `python run_experiment.py --mode cpu --version baseline --blas single` |
-| Optimized (Single-thread BLAS) | `python run_experiment.py --mode cpu --version optimized --blas single` |
-| Baseline (Multi-thread BLAS) | `python run_experiment.py --mode cpu --version baseline --blas multi` |
-| Optimized (Multi-thread BLAS) | `python run_experiment.py --mode cpu --version optimized --blas multi` |
-| If real data is to be used add the following line (with proper data path and file name) and data id. And please follow the dataformat | `--dataset real --data_path src/data/global_temp_use.csv --data_id global_temp`|
+## 🖥️ CPU Benchmarks
 
+Run experiments by specifying:
 
-### GPU Benchmarks (Planned)
+- `--version` → `baseline` or `optimized`  
+- `--blas` → `single` or `multi`  
 
-> **Note:**  
-> GPU: Sipra is working on it  
-> Current GPU script is in [GPU Parallel Processing Module](https://github.com/AmitavaDutta/parallel_data_processing_engine/tree/main/GPU_parallelproce)  
-> In case of GPU, if a single code structure is implemented as CPU, do the following:
+---
+
+### ▶️ Basic Usage
+
 ```bash
-python run_experiment.py --mode gpu
+python run_experiment.py --mode cpu --version <baseline|optimized> --blas <single|multi>
 ```
 
-> All results are automatically timestamped and saved in the `results/` directory.  
-> (For now only the CPU execution part is pipelined that way)
+---
+
+### 📊 Using Real Dataset
+
+```bash
+python run_experiment.py --mode cpu --version optimized --blas multi --dataset real --data_path src/data/global_temp_use.csv --data_id global_temp
+```
+
+---
+
+### 📌 Default Behavior
+
+- If `--dataset` is **not specified**, a **synthetic random dataset** is generated automatically.
+
+---
+
+## 🚀 GPU Benchmarks
+
+GPU execution follows the **same interface** (no BLAS control required).
+
+---
+
+### ▶️ Basic Usage
+
+```bash
+python run_experiment.py --mode gpu --version <baseline|optimized>
+```
+
+---
+
+### 📊 Using Real Dataset
+
+```bash
+python run_experiment.py --mode gpu --version optimized --dataset real --data_path src/data/global_temp_use.csv --data_id global_temp
+```
+
+---
+
+## 🧠 Notes
+
+- GPU execution **automatically detects available CUDA devices**:
+
+```
+[Device] GPU detected: NVIDIA T1000 8GB (7.6 GB VRAM)
+```
+
+- If no GPU is available:
+  - The program exits **gracefully**
+
+---
+
+## 📁 Output Structure
+
+Results are automatically saved to:
+
+```
+results/cpu/...   # CPU runs
+results/gpu/...   # GPU runs
+```
+
+### Example Output
+
+```
+results/gpu/optimized/global_temp/results_global_temp_optimized_gpu.csv
+```
+
+---
+
+## 🧪 Dataset
+
+- **Default:** Synthetic random dataset  
+- **Real dataset:** NASA POWER temperature data  
+
+### Format
+
+- Matrix shape: **N × T**  
+  - **N** = number of locations  
+  - **T** = number of time steps  
 
 ---
 ### Testing the implementation on an actual dataset
