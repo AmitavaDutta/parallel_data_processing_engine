@@ -2,6 +2,8 @@
 
 This repository contains a Python script designed to compute large-scale $N \times N$ correlation matrices for $N$ parallel time series. It serves as a benchmarking tool to demonstrate the performance and memory usage of GPU using PyTorch.
 
+Made by Sipra Subhadarsini Sahoo
+
 This was developed for **DS3294 - DS Practice Project #9**.
 
 ---
