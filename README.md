@@ -155,10 +155,14 @@ The initial benchmarking was performed on randomly generated dataset. We will us
 
 | Contributor | Project Phase |
 |-------------|---------------|
-| **Amitava** | CPU Implementation (Single/Multi-thread) | 
+| **Amitava** | Created and made subsequent editing of the main README.md|
+|             | CPU Implementation (Single/Multi-thread) | 
 |             | Block-wise Computation (CPU) | 
 |             | Theoritical Complexity Analysis ($O(N^2)$) for CPU|
-| **Sipra** | GPU Implementation | 
+|             | Created tge repository structure and implemented various .py modules in src/ so as to smooth working of run_experiment.py|
+|             | Integrated Sipra's GPU scripts into run_experiment.py, and from the functions written by Sipra implemented them into .py modules |
+|             | Written and edited the report (shared)|
+| **Sipra**   | GPU Implementation | 
 |             | Block-wise Computation (GPU) | 
 | **Bhavini** | Numerical Consistency Check (CPU vs GPU) |
 |             | Overhead vs Computation Equilibrium | 
@@ -169,9 +173,7 @@ The initial benchmarking was performed on randomly generated dataset. We will us
 | **Yashvita** | Bandwidth & Data Transfer Analysis | 
 |             | Transfer Overhead Optimization | 
 |             | Try out the implementation on climate dataset | 
+|             | Written and edited the report (shared)|
+
 
 ---
-
-# Presentation
-
-[View the Presentation](https://docs.google.com/presentation/d/1Owx46RyIDORviqmCtD00_zH3qimb5DthErWeH7hPy30/edit?usp=sharing)
