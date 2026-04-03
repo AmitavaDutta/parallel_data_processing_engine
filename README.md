@@ -41,7 +41,8 @@ parallel_data_processing_engine/
 │   │       └── global_climate_master.csv
 │   └── results/                   # Experiment outputs (CSV & Plots)
 │
-└── Research Artifacts & Support   # These are the rest of the files and directories that contain some tests, some datasets
+└── Research Artifacts & Support   # These are the rest of the files and directories that
+    │                                 contain some tests, some datasets
     └── [Experimental Files]       # Supplementary notebooks, standalone tests, and docs
 ```
 
