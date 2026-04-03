@@ -163,6 +163,7 @@ base_data = load_data()
 factors = [1, 2, 5, 10, 20]
 
 cpu_times = []
+gpu_times = []
 sizes = []
 transfer_times = []
 compute_times = []
@@ -185,7 +186,7 @@ for f in factors:
     ram_before = get_ram_usage_mb()
 
     # CPU timing
-    cpu_time = cpu_corr(data)
+    cpu_corr_matrix, cpu_time = cpu_corr(data)
     cpu_times.append(cpu_time)
 
     # RAM after
@@ -195,34 +196,47 @@ for f in factors:
 
     # GPU timing 
     corr_matrix, gpu_time, gpu_mem, transfer_time, compute_time = gpu_correlation_full(data, device)
-    gpu_times.append(gpu_time)
-    transfer_times.append(transfer_time)
-    compute_times.append(compute_time)
 
+    if corr_matrix is not None:
+      gpu_times.append(gpu_time)
+      transfer_times.append(transfer_time)
+      compute_times.append(compute_time)
+    else:
+      gpu_times.append(0)
+      transfer_times.append(0)
+      compute_times.append(0)
+
+    #RESULTS
+    
     print("\n--- Results ---")
     print(f"CPU time: {cpu_time:.4f}s")
     print(f"RAM used: {ram_used:.2f} MB")
 
     if corr_matrix is not None:
-        print(f"GPU total: {gpu_time:.4f}s")
-        print(f"   ↳ Transfer: {transfer_time:.4f}s")
-        print(f"   ↳ Compute:  {compute_time:.4f}s")
-        print(f"   ↳ VRAM:     {gpu_mem:.2f} MB")
+      print(f"GPU total: {gpu_time:.8f}s")  # higher precision
+      print(f"   ↳ Transfer: {transfer_time:.8f}s")
+      print(f"   ↳ Compute:  {compute_time:.8f}s")
+      print(f"   ↳ VRAM:     {gpu_mem:.2f} MB")
+      
+      # Ratio
+      ratio = transfer_time / compute_time if compute_time > 0 else 0
+      print(f"   ↳ Transfer/Compute ratio: {ratio:.2f}")
 
-        ratio = transfer_time / compute_time if compute_time > 0 else 0
-        print(f"   ↳ Transfer/Compute ratio: {ratio:.2f}")
+      # Bottleneck
+      if transfer_time > compute_time:
+        print("Bottleneck: GPU transfer")
+      else:
+        print("Bottleneck: GPU compute")
 
-         # Bottleneck
-        if transfer_time > compute_time:
-            print("Bottleneck: GPU transfer")
-        else:
-            print("Bottleneck: GPU compute")
-        
-        # Crossover detection
-        if gpu_faster_at is None and gpu_time < cpu_time: 
-            gpu_faster_at = N
-            
-        check_numerical_consistency(data, corr_matrix)
+      # Crossover detection
+      if gpu_faster_at is None and gpu_time < cpu_time:
+        gpu_faster_at = N
+
+      # Numerical consistency
+      check_numerical_consistency(cpu_corr_matrix, corr_matrix)
+
+    else:
+      print("GPU not available")
         
 # ---------------- CROSSOVER ----------------       
 print("\n--- GPU vs CPU Crossover ---")
