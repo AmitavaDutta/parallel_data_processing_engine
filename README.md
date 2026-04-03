@@ -38,7 +38,11 @@ parallel_data_processing_engine/
 │   │       ├── gpu_correlation.py # Full-matrix and block-wise tensor operations
 │   │       ├── gpu_benchmark.py   # VRAM profiling and GPU execution timing
 │   │       └── gpu_visualize.py   # GPU plotting and consistency validation
-│   └── results/                   # Auto-generated experiment outputs and performance plots
+│   └── results/
+│           ├── cpu/
+│           │   └── <version>/<dataset_id>/...
+│           └── gpu/
+│               └── <version>/<dataset_id>/...                   
 │
 ├── Exploratory Analysis & Notebooks
 │   ├── Bandwidth.ipynb            # Empirical analysis of memory transfer overhead
@@ -61,107 +65,90 @@ parallel_data_processing_engine/
 
 ---
 
-## ⚡ Running Experiments
+## Execution Guide
 
-The engine provides a **CLI-based interface** to run CPU and GPU benchmarks with flexible configurations.
-
----
-
-## 🖥️ CPU Benchmarks
-
-Run experiments by specifying:
-
-- `--version` → `baseline` or `optimized`  
-- `--blas` → `single` or `multi`  
+The engine provides a unified Command Line Interface (CLI) via `run_experiment.py` for executing standard benchmarks. If no dataset is explicitly passed, the engine defaults to generating a synthetic random dataset ($N \times T$) for baseline testing.
 
 ---
 
-### ▶️ Basic Usage
+### CPU Benchmarks
 
+To execute CPU experiments, specify the algorithm `--version` (`baseline` or `optimized`) and the `--blas` threading backend (`single` or `multi`).
+
+**Basic Usage:**
 ```bash
 python run_experiment.py --mode cpu --version <baseline|optimized> --blas <single|multi>
 ```
 
----
-
-### 📊 Using Real Dataset
-
+**Using Real-World Dataset:**
 ```bash
 python run_experiment.py --mode cpu --version optimized --blas multi --dataset real --data_path src/data/global_temp_use.csv --data_id global_temp
 ```
 
 ---
 
-### 📌 Default Behavior
+### GPU Benchmarks
 
-- If `--dataset` is **not specified**, a **synthetic random dataset** is generated automatically.
+GPU execution follows an identical interface. Note that BLAS threading control is not required as it is natively managed by the CUDA backend.
 
----
-
-## 🚀 GPU Benchmarks
-
-GPU execution follows the **same interface** (no BLAS control required).
-
----
-
-### ▶️ Basic Usage
-
+**Basic Usage:**
 ```bash
 python run_experiment.py --mode gpu --version <baseline|optimized>
 ```
 
----
-
-### 📊 Using Real Dataset
-
+**Using Real-World Dataset:**
 ```bash
 python run_experiment.py --mode gpu --version optimized --dataset real --data_path src/data/global_temp_use.csv --data_id global_temp
 ```
 
 ---
 
-## 🧠 Notes
+## Hardware Detection & Safety
 
-- GPU execution **automatically detects available CUDA devices**:
+- **CUDA Detection:** The engine automatically scans for available CUDA-compatible hardware. Upon success, the system initializes the GPU device:
+  
+  ```
+  [Device] CUDA-compatible GPU detected.
+  ```
 
-```
-[Device] CUDA-compatible GPU detected
-```
-
-- If no GPU is available:
-  - The program exits **gracefully**
+- **Graceful Exit:** In environments where a GPU is requested but not detected, the program terminates safely without data loss.
 
 ---
 
-## 📁 Output Structure
+## Data Management & Output
 
-Results are automatically saved to:
+### Dataset Specifications
 
+- Initial benchmarking is conducted using synthetic matrices to establish theoretical complexity bounds.
+- For empirical validation, the engine utilizes structured real datasets.
+
+**Format:**
+- Input matrices follow an **N × T** structure  
+  - **N** = number of locations  
+  - **T** = number of time steps  
+
+**Validation:**
+- Ensures numerical consistency and performance stability on structured datasets.
+
+---
+
+### Output Hierarchy
+
+All experimental results—including runtime CSV logs, memory profiles, and correlation outputs—are automatically routed to the `results/` directory using a hierarchical structure:
+
+```text
+results/
+├── cpu/
+│   └── <version>/<dataset_id>/...
+└── gpu/
+    └── <version>/<dataset_id>/...
 ```
-results/cpu/...   # CPU runs
-results/gpu/...   # GPU runs
-```
 
-### Example Output
-
+**Example Output Path:**
 ```
 results/gpu/optimized/global_temp/results_global_temp_optimized_gpu.csv
 ```
 
----
-
-## 🧪 Dataset
-
-- **Default:** Synthetic random dataset  
-- **Real dataset:** NASA POWER temperature data  
-
-### Format
-
-- Matrix shape: **N × T**  
-  - **N** = number of locations  
-  - **T** = number of time steps  
-
----
 ### Testing the implementation on an actual dataset
 The initial benchmarking was performed on randomly generated dataset. We will use temperature data over a decade from a large number of locations (N) obtained from NASA POWER API. This is to ensure that the implementation works on actual datasets too.  
 ## 🛠 Project Workflow & Responsibilities
