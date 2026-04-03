@@ -4,6 +4,8 @@ This repository contains a Python script designed to compute large-scale $N \tim
 
 This was developed for **DS3294 - DS Practice Project #9**.
 
+Made by: Sipra Subhadarsini Sahoo
+
 ---
 
 ##  Project Overview
