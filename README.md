@@ -143,7 +143,7 @@ The initial benchmarking was performed on randomly generated dataset. We will us
 |             | Block-wise Computation (CPU) | 
 |             | Theoritical Complexity Analysis ($O(N^2)$) for CPU|
 |             | Created tge repository structure and implemented various .py modules in src/ so as to smooth working of run_experiment.py|
-|             | Integrated Sipra's GPU scripts into run_experiment.py, and from the functions written by Sipra implemented them into .py modules |
+|             | Integrated Sipra's GPU scripts into run_experiment.py, and from the functions written by her implemented them into .py modules |
 |             | Written and edited the report (shared)|
 | **Sipra**   | GPU Implementation | 
 |             | Block-wise Computation (GPU) | 
