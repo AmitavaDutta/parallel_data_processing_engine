@@ -27,15 +27,15 @@ parallel_data_processing_engine/
 │   ├── src/                       # Primary source code modules
 │   │   ├── dataset.py             # Shared data ingestion and synthetic generation
 │   │   ├── cpu/                   # CPU correlation pipelines (Serial, Parallel, Block)
-│   │   │   ├── serial_cpu.py      
-│   │   │   ├── parallel_cpu.py    
-│   │   │   ├── block_cpu.py       
-│   │   │   ├── benchmark.py       
-│   │   │   └── visualize.py       
+│   │   │   ├── serial_cpu.py      # Symmetry-aware single-threaded logic (50% FLOP reduction)
+│   │   │   ├── parallel_cpu.py    # Multi-process implementation utilizing shared-memory buffers
+│   │   │   ├── block_cpu.py       # Tiling strategy optimized for L3 cache hit-rates
+│   │   │   ├── benchmark.py       # Automated wall-clock and RSS memory profiling suite
+│   │   │   └── visualize.py       # Performance curve and correlation heatmap generation
 │   │   ├── gpu/                   # CUDA-accelerated correlation pipelines
-│   │   │   ├── gpu_correlation.py 
-│   │   │   ├── gpu_benchmark.py   
-│   │   │   └── gpu_visualize.py   
+│   │   │   ├── gpu_correlation.py # CUDA-accelerated tensor operations with VRAM-aware tiling
+│   │   │   ├── gpu_benchmark.py   # High-precision profiling of kernel latency and VRAM occupancy
+│   │   │   └── gpu_visualize.py   # GPU performance scaling and numerical consistency validation 
 │   │   └── data/                  # Source datasets for empirical validation
 │   │       ├── data_format_readme.md
 │   │       └── global_climate_master.csv
