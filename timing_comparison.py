@@ -4,7 +4,21 @@ import torch
 import matplotlib.pyplot as plt
 import psutil
 
-from cancer_data import load_data
+import yfinance as yf
+
+def load_time_series():
+    tickers = [
+        "AAPL", "MSFT", "GOOGL", "AMZN", "META",
+        "TSLA", "NVDA", "JPM", "V", "UNH"
+    ]
+
+    data = yf.download(tickers, period="1y")["Close"]
+    data = data.dropna()
+
+    # Convert to returns
+    returns = data.pct_change().dropna()
+
+    return returns.values.T
 
 # ---------------- GPU CORRELATION ----------------
 
@@ -168,6 +182,12 @@ print("\n--- Complexity Analysis ---")
 for i in range(1, len(sizes)):
     growth = cpu_times[i] / cpu_times[i - 1]
     print(f"N: {sizes[i-1]} → {sizes[i]} | Time growth: {growth:.2f}x")
+
+print("\n--- GPU Complexity Analysis ---")
+for i in range(1, len(sizes)):
+    if gpu_times[i-1] > 0:  # avoid division issues
+        growth = gpu_times[i] / gpu_times[i - 1]
+        print(f"N: {sizes[i-1]} → {sizes[i]} | GPU growth: {growth:.2f}x")
 
 # ---------------- PLOTTING ----------------
 
