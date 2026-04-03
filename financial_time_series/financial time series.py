@@ -22,6 +22,20 @@ def load_time_series():
     # Return as numpy array (rows = time series)
     return returns.values.T, returns.columns
 
+# ---------------- SAVE CSV (RUN ONCE) ----------------
+if __name__ == "__main__":
+    tickers = [
+        "AAPL", "MSFT", "GOOGL", "AMZN", "META",
+        "TSLA", "NVDA", "JPM", "V", "UNH"
+    ]
+
+    data = yf.download(tickers, period="1y")["Close"]
+    data = data.dropna()
+
+    returns = data.pct_change().dropna()
+
+    returns.to_csv("stocks.csv")
+    print("Saved as stocks.csv")
 
 # ---------------- MAIN ----------------
 base_data, labels = load_time_series()
