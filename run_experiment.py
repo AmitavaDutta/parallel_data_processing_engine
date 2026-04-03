@@ -185,7 +185,7 @@ def run_gpu_experiments():
         else X_full[:example_N, :T].astype("float32")
     )
 
-    C, _, _ = gpu_correlation_full(X_example, device)
+    C, _, _, _, _ = gpu_correlation_full(X_example, device)
 
     file_prefix = f"{dataset_name}_{version}_gpu"
 
