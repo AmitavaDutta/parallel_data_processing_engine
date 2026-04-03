@@ -54,7 +54,7 @@ parallel_data_processing_engine/
 │   ├── run_experiment_cpu.py      # Standalone execution wrapper for isolated CPU testing
 │   ├── run_experiment_gpu.py      # Standalone execution wrapper for isolated GPU testing
 │   ├── timing_comparison.py       # Micro-benchmarking script for targeted operations
-│   ├── test_cases/                # Unit tests and numerical validation suites (CPU vs GPU)
+│   ├── test_cases/                # tests and numerical validation suites (CPU vs GPU)
 │   ├── financial_time_series/     # Experimental environment for sector-specific datasets
 │   └── GPU_parallelproce/         # Prototype parallel processing routines for CUDA
 │
