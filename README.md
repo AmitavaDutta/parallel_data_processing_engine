@@ -26,42 +26,23 @@ parallel_data_processing_engine/
 │   ├── run_experiment.py          # Unified CLI entry point for all benchmarks
 │   ├── src/                       # Primary source code modules
 │   │   ├── dataset.py             # Shared data ingestion and synthetic generation
-│   │   ├── cpu/                   # CPU correlation pipelines
-│   │   │   ├── __init__.py
-│   │   │   ├── serial_cpu.py      # Single-threaded logic and symmetry routing
-│   │   │   ├── parallel_cpu.py    # Multi-threaded multiprocessing implementation
-│   │   │   ├── block_cpu.py       # Cache-optimized block computation
-│   │   │   ├── benchmark.py       # CPU execution timing and memory profiling
-│   │   │   └── visualize.py       # CPU plotting (runtime, speedup, correlation)
+│   │   ├── cpu/                   # CPU correlation pipelines (Serial, Parallel, Block)
+│   │   │   ├── serial_cpu.py      
+│   │   │   ├── parallel_cpu.py    
+│   │   │   ├── block_cpu.py       
+│   │   │   ├── benchmark.py       
+│   │   │   └── visualize.py       
 │   │   ├── gpu/                   # CUDA-accelerated correlation pipelines
-│   │   │   ├── __init__.py
-│   │   │   ├── gpu_correlation.py # Full-matrix and block-wise tensor operations
-│   │   │   ├── gpu_benchmark.py   # VRAM profiling and GPU execution timing
-│   │   │   └── gpu_visualize.py   # GPU plotting and consistency validation
+│   │   │   ├── gpu_correlation.py 
+│   │   │   ├── gpu_benchmark.py   
+│   │   │   └── gpu_visualize.py   
 │   │   └── data/                  # Source datasets for empirical validation
 │   │       ├── data_format_readme.md
 │   │       └── global_climate_master.csv
-│   └── results/                   # Auto-generated experiment outputs
-│       ├── cpu/                   # CPU performance logs and plots
-│       └── gpu/                   # GPU performance logs and plots
+│   └── results/                   # Experiment outputs (CSV & Plots)
 │
-├── Exploratory Analysis & Notebooks
-│   ├── Bandwidth.ipynb            # Empirical analysis of memory transfer overhead
-│   ├── GPU.ipynb                  # Interactive environment for isolated GPU testing
-│   └── GPU_versions.ipynb         # Comparative study of block-wise vs. full-matrix logic
-│
-├── Specialized Benchmarks & Auxiliary Scripts
-│   ├── run_experiment_cpu.py      # Standalone execution wrapper for isolated CPU testing
-│   ├── run_experiment_gpu.py      # Standalone execution wrapper for isolated GPU testing
-│   ├── timing_comparison.py       # Micro-benchmarking script for targeted operations
-│   ├── test_cases/                # tests and numerical validation suites (CPU vs GPU)
-│   ├── financial_time_series/     # Experimental environment for sector-specific datasets
-│   └── GPU_parallelproce/         # Prototype parallel processing routines for CUDA
-│
-└── Documentation & Project Resources
-    ├── Project_descriptions/      # Original academic guidelines and architectural drafts
-    ├── GPU_CPU.docx               # Theoretical complexity analysis and architectural notes
-    └── CPU_comments/              # Code review logs and CPU optimization strategies
+└── Research Artifacts & Support   # These are the rest of the files and directories that contain some tests, some datasets
+    └── [Experimental Files]       # Supplementary notebooks, standalone tests, and docs
 ```
 
 ---
