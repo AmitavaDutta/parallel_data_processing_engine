@@ -1,34 +1,62 @@
 # Parallel Data Processing Engine
 
-A high-performance benchmarking suite designed to evaluate and compare data processing efficiency across **CPU** (Serial, Parallel, Block-wise) and **GPU** architectures.  
-The project focuses on identifying the **break-even point** where computational gains outweigh memory transfer overheads.
+**Team 13** **Members:** Amitava, Sipra, Bhavini, Yashvita
 
 ---
 
-## 📂 Repository Structure
+## Project Description
 
-```
+This repository contains a high-performance benchmarking suite designed to evaluate and compare data processing efficiency across CPU (Serial, Parallel, Block-wise) and GPU architectures. Using correlation matrix estimation from large collections of time series as a case study, the project systematically analyzes $O(N^2)$ complexity bottlenecks. The primary objective is to identify the break-even points where hardware computational gains successfully outweigh data serialization and memory transfer overheads as data dimensionality scales.
+
+The testing encompasses both synthetic random data and real-world empirical datasets—specifically NASA POWER temperature data and financial time series—to ensure robust performance analysis under varying spatial and temporal constraints.
+
+---
+
+## Repository Structure
+
+The repository is organized into distinct functional domains, separating the unified benchmarking engine from specialized exploratory analyses and validation suites.
+
+```text
 parallel_data_processing_engine/
-├── run_experiment.py          # Main entry point (CPU + GPU unified CLI)
-├── results/                   # Auto-generated experiment outputs
 │
-└── src/
-    ├── dataset.py             # Shared: data loading + synthetic generation
+├── README.md                      # Project documentation and execution guide
+├── LICENSE                        # Project license and usage terms
 │
-    ├── cpu/                   # CPU-based implementations
-    │   ├── __init__.py
-    │   ├── serial_cpu.py      # Single-threaded correlation
-    │   ├── parallel_cpu.py   # Multi-threaded implementation
-    │   ├── block_cpu.py      # Cache-optimized block computation
-    │   ├── benchmark.py      # CPU benchmarking logic
-    │   └── visualize.py      # CPU plotting (runtime, speedup, memory, corr)
+├── Core Engine & Execution
+│   ├── run_experiment.py          # Unified CLI entry point for all benchmarks
+│   ├── src/                       # Primary source code modules
+│   │   ├── dataset.py             # Shared data ingestion and synthetic generation
+│   │   ├── cpu/                   # CPU correlation pipelines
+│   │   │   ├── __init__.py
+│   │   │   ├── serial_cpu.py      # Single-threaded logic and symmetry routing
+│   │   │   ├── parallel_cpu.py    # Multi-threaded multiprocessing implementation
+│   │   │   ├── block_cpu.py       # Cache-optimized block computation
+│   │   │   ├── benchmark.py       # CPU execution timing and memory profiling
+│   │   │   └── visualize.py       # CPU plotting (runtime, speedup, correlation)
+│   │   └── gpu/                   # CUDA-accelerated correlation pipelines
+│   │       ├── __init__.py
+│   │       ├── gpu_correlation.py # Full-matrix and block-wise tensor operations
+│   │       ├── gpu_benchmark.py   # VRAM profiling and GPU execution timing
+│   │       └── gpu_visualize.py   # GPU plotting and consistency validation
+│   └── results/                   # Auto-generated experiment outputs and performance plots
 │
-    └── gpu/                   # GPU-based implementations
-        ├── __init__.py
-        ├── gpu_correlation.py   # Full + blockwise GPU correlation
-        ├── gpu_benchmark.py     # GPU benchmarking logic
-        └── gpu_visualize.py     # GPU plotting (runtime, memory, corr)
-
+├── Exploratory Analysis & Notebooks
+│   ├── Bandwidth.ipynb            # Empirical analysis of memory transfer overhead
+│   ├── GPU.ipynb                  # Interactive environment for isolated GPU testing
+│   └── GPU_versions.ipynb         # Comparative study of block-wise vs. full-matrix logic
+│
+├── Specialized Benchmarks & Auxiliary Scripts
+│   ├── run_experiment_cpu.py      # Standalone execution wrapper for isolated CPU testing
+│   ├── run_experiment_gpu.py      # Standalone execution wrapper for isolated GPU testing
+│   ├── timing_comparison.py       # Micro-benchmarking script for targeted operations
+│   ├── test_cases/                # Unit tests and numerical validation suites (CPU vs GPU)
+│   ├── financial_time_series/     # Experimental environment for sector-specific datasets
+│   └── GPU_parallelproce/         # Prototype parallel processing routines for CUDA
+│
+└── Documentation & Project Resources
+    ├── Project_descriptions/      # Original academic guidelines and architectural drafts
+    ├── GPU_CPU.docx               # Theoretical complexity analysis and architectural notes
+    └── CPU_comments/              # Code review logs and CPU optimization strategies
 ```
 
 ---
