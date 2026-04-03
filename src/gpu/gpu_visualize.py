@@ -2,11 +2,6 @@ import os
 import matplotlib.pyplot as plt
 import torch
 
-import os
-import matplotlib.subplots
-import matplotlib.pyplot as plt
-import torch
-
 def plot_runtime(results_df, save_path, version):
     """Line plot comparing the total execution time of all 4 modes."""
     N = results_df["N"]

@@ -56,7 +56,8 @@ def run_cpu_experiments():
         X_full = read_dataset(args.data_path)
         print(f"Loaded dataset: shape = {X_full.shape}")
         N_full, T = X_full.shape
-        N_values = sorted(list(set([1,2,3,4,5,6,7,8,9,10, N_full])))
+        #N_values = sorted(list(set([1,2,3,4,5,6,7,8,9,10, N_full])))
+        N_values = sorted(list(set([10,100,500,1000,1500,2000,2500,3000,3500, N_full])))
     else:
         T = 2000
         N_values = [500,1000,2000,4000,8000,10000,15000,20000]
@@ -143,7 +144,8 @@ def run_gpu_experiments():
         X_full = read_dataset(args.data_path)
         print(f"Loaded dataset: shape = {X_full.shape}")
         N_full, T = X_full.shape
-        N_values = sorted(list(set([1,2,3,4,5,6,7,8,9,10, N_full])))
+        #N_values = sorted(list(set([1,2,3,4,5,6,7,8,9,10, N_full])))
+        N_values = sorted(list(set([10,100,500,1000,1500,2000,2500,3000,3500, N_full])))
     else:
         T = 2000
         N_values = [500,1000,2000,4000,8000,10000,15000,20000]
