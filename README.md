@@ -150,7 +150,6 @@ The initial benchmarking was performed on randomly generated dataset. We will us
 | **Bhavini** | Numerical Consistency Check (CPU vs GPU) on Financial Dataset|
 |             | Complexity Analysis ($O(N^2)$) on Financial dataset|
 |             | System Profiling (CPU/GPU/RAM bottlenecks) on Financial Dataset| 
-|             | Code Revision & Optimization | 
 |             | Experiment using real world data Execution & Plotting (Shared) on Financial Dataset | 
 | **Yashvita** | Bandwidth & Data Transfer Analysis: Pinned vs Paged memory | 
 |             | Transfer Overhead Optimization | 
