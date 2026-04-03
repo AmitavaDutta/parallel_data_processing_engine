@@ -33,16 +33,17 @@ parallel_data_processing_engine/
 │   │   │   ├── block_cpu.py       # Cache-optimized block computation
 │   │   │   ├── benchmark.py       # CPU execution timing and memory profiling
 │   │   │   └── visualize.py       # CPU plotting (runtime, speedup, correlation)
-│   │   └── gpu/                   # CUDA-accelerated correlation pipelines
-│   │       ├── __init__.py
-│   │       ├── gpu_correlation.py # Full-matrix and block-wise tensor operations
-│   │       ├── gpu_benchmark.py   # VRAM profiling and GPU execution timing
-│   │       └── gpu_visualize.py   # GPU plotting and consistency validation
-│   └── results/
-│           ├── cpu/
-│           │   └── <version>/<dataset_id>/...
-│           └── gpu/
-│               └── <version>/<dataset_id>/...                   
+│   │   ├── gpu/                   # CUDA-accelerated correlation pipelines
+│   │   │   ├── __init__.py
+│   │   │   ├── gpu_correlation.py # Full-matrix and block-wise tensor operations
+│   │   │   ├── gpu_benchmark.py   # VRAM profiling and GPU execution timing
+│   │   │   └── gpu_visualize.py   # GPU plotting and consistency validation
+│   │   └── data/                  # Source datasets for empirical validation
+│   │       ├── data_format_readme.md
+│   │       └── global_climate_master.csv
+│   └── results/                   # Auto-generated experiment outputs
+│       ├── cpu/                   # CPU performance logs and plots
+│       └── gpu/                   # GPU performance logs and plots
 │
 ├── Exploratory Analysis & Notebooks
 │   ├── Bandwidth.ipynb            # Empirical analysis of memory transfer overhead
