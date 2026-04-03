@@ -6,7 +6,7 @@ This script calculates an N×N correlation matrix for N time series.
 It has the following two approaches:
 1. GPU (PyTorch Full) - Computes the entire matrix in one operation.
 2. GPU (PyTorch Blockwise) - Computes the matrix in chunks to save VRAM.
-
+Made completely by:Sipra Subhadarsini Sahoo
 It then visualizes the time and memory usage using Matplotlib.
 """
 
