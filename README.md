@@ -147,13 +147,12 @@ The initial benchmarking was performed on randomly generated dataset. We will us
 |             | Written and edited the report (shared)|
 | **Sipra**   | GPU Implementation | 
 |             | Block-wise Computation (GPU) | 
-| **Bhavini** | Numerical Consistency Check (CPU vs GPU) |
-|             | Overhead vs Computation Equilibrium | 
-|             | Complexity Analysis ($O(N^2)$) |
-|             | System Profiling (CPU/GPU/RAM bottlenecks) | 
+| **Bhavini** | Numerical Consistency Check (CPU vs GPU) on Financial Dataset|
+|             | Complexity Analysis ($O(N^2)$) on Financial dataset|
+|             | System Profiling (CPU/GPU/RAM bottlenecks) on Financial Dataset| 
 |             | Code Revision & Optimization | 
-|             | Experiment using real world data Execution & Plotting (Shared) | 
-| **Yashvita** | Bandwidth & Data Transfer Analysis | 
+|             | Experiment using real world data Execution & Plotting (Shared) on Financial Dataset | 
+| **Yashvita** | Bandwidth & Data Transfer Analysis: Pinned vs Paged memory | 
 |             | Transfer Overhead Optimization | 
 |             | Try out the implementation on climate dataset | 
 |             | Written and edited the report (shared)|
